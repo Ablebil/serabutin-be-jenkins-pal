@@ -1,19 +1,15 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: builder
+    image: ${DOCKER_IMAGE}:${DOCKER_TAG}
     container_name: serabutin-app
     restart: unless-stopped
-    volumes:
-      - .:/var/www/html
-      - /var/www/html/vendor
-    ports:
-      - "8000:8000"
-    command: sh -lc "rm -f bootstrap/cache/*.php && php artisan optimize:clear && php artisan package:discover --ansi && php artisan serve --host=0.0.0.0 --port=8000"
     env_file:
       - .env
+    volumes:
+      - storage_data:/var/www/html/storage/app
+      - logs_data:/var/www/html/storage/logs
+    ports:
+      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -21,6 +17,12 @@ services:
         condition: service_healthy
     networks:
       - serabutin-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   postgres:
     image: postgres:16-alpine
@@ -32,8 +34,6 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     networks:
       - serabutin-network
     healthcheck:
@@ -48,8 +48,6 @@ services:
     container_name: serabutin-redis
     restart: unless-stopped
     command: redis-server --requirepass ${REDIS_PASSWORD}
-    ports:
-      - "6379:6379"
     networks:
       - serabutin-network
     healthcheck:
@@ -75,6 +73,10 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  storage_data:
+    driver: local
+  logs_data:
     driver: local
 
 networks:
