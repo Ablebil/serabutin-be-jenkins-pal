@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Mail\VerifyEmailMail;
+use App\Models\RefreshToken;
 use App\Models\User;
 use App\Services\Auth\EmailVerificationTokenService;
 use App\Services\Auth\RefreshTokenService;
@@ -274,6 +275,51 @@ class AuthFlowTest extends TestCase
             ->assertStatus(401)
             ->assertJsonPath('status', 'error')
             ->assertJsonPath('message', __('general.unauthenticated'));
+    }
+
+    public function test_login_limits_active_sessions_to_three_and_revokes_oldest(): void
+    {
+        $user = $this->createUser([
+            'email' => 'session-limit@example.com',
+            'password_hash' => 'secret12345',
+            'is_verified' => true,
+            'is_active' => true,
+        ]);
+
+        $refreshTokens = [];
+
+        for ($i = 0; $i < 4; $i++) {
+            $response = $this->postJson('/api/v1/auth/login', [
+                'email' => $user->email,
+                'password' => 'secret12345',
+            ]);
+
+            $response->assertOk();
+
+            $cookie = $response->getCookie('refresh_token', false);
+            $this->assertNotNull($cookie);
+
+            $refreshTokens[] = (string) $cookie->getValue();
+        }
+
+        $refreshTokenService = app(RefreshTokenService::class);
+
+        $this->assertDatabaseMissing('refresh_tokens', [
+            'token_hash' => $refreshTokenService->hashToken($refreshTokens[0]),
+            'user_id' => $user->id,
+        ]);
+
+        foreach (array_slice($refreshTokens, 1) as $token) {
+            $this->assertDatabaseHas('refresh_tokens', [
+                'token_hash' => $refreshTokenService->hashToken($token),
+                'user_id' => $user->id,
+            ]);
+        }
+
+        $this->assertSame(
+            3,
+            RefreshToken::query()->where('user_id', $user->id)->count()
+        );
     }
 
     private function prepareSchema(): void

@@ -11,21 +11,28 @@ class RefreshTokenService
 {
     public function issue(User $user): array
     {
-        $plainToken = $this->generateToken();
-        $expiresAt = Carbon::now()->addSeconds($this->ttlSeconds());
+        return DB::transaction(function () use ($user): array {
+            $now = Carbon::now();
 
-        $session = RefreshToken::query()->create([
-            'user_id' => $user->id,
-            'token_hash' => $this->hashToken($plainToken),
-            'expires_at' => $expiresAt,
-            'created_at' => Carbon::now(),
-        ]);
+            $this->cleanupExpiredByUserId($user->id, $now);
+            $this->pruneOldestSessionsForUser($user->id);
 
-        return [
-            'plain_text_token' => $plainToken,
-            'expires_at' => $session->expires_at,
-            'session' => $session,
-        ];
+            $plainToken = $this->generateToken();
+            $expiresAt = $now->copy()->addSeconds($this->ttlSeconds());
+
+            $session = RefreshToken::query()->create([
+                'user_id' => $user->id,
+                'token_hash' => $this->hashToken($plainToken),
+                'expires_at' => $expiresAt,
+                'created_at' => $now,
+            ]);
+
+            return [
+                'plain_text_token' => $plainToken,
+                'expires_at' => $session->expires_at,
+                'session' => $session,
+            ];
+        });
     }
 
     public function findValid(string $plainToken): ?RefreshToken
@@ -103,6 +110,45 @@ class RefreshTokenService
         $ttl = (int) config('auth.refresh_token.ttl_seconds', 86400);
 
         return $ttl > 0 ? $ttl : 86400;
+    }
+
+    private function maxSessions(): int
+    {
+        $max = (int) config('auth.refresh_token.max_sessions', 3);
+
+        return $max > 0 ? $max : 3;
+    }
+
+    private function cleanupExpiredByUserId(string $userId, Carbon $now): void
+    {
+        RefreshToken::query()
+            ->where('user_id', $userId)
+            ->where('expires_at', '<=', $now)
+            ->delete();
+    }
+
+    private function pruneOldestSessionsForUser(string $userId): void
+    {
+        $keepCount = max(0, $this->maxSessions() - 1);
+
+        $query = RefreshToken::query()
+            ->where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
+
+        if ($keepCount > 0) {
+            $query->skip($keepCount);
+        }
+
+        $idsToDelete = $query->pluck('id');
+
+        if ($idsToDelete->isEmpty()) {
+            return;
+        }
+
+        RefreshToken::query()
+            ->whereIn('id', $idsToDelete)
+            ->delete();
     }
 
     private function generateToken(): string

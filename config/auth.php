@@ -141,6 +141,7 @@ return [
 
     'refresh_token' => [
         'ttl_seconds' => (int) env('AUTH_REFRESH_TTL_SECONDS', 86400),
+        'max_sessions' => (int) env('AUTH_MAX_SESSIONS', 3),
         'cookie' => [
             'name' => env('AUTH_COOKIE_NAME', 'refresh_token'),
             'path' => env('AUTH_COOKIE_PATH', '/api/v1/auth'),
