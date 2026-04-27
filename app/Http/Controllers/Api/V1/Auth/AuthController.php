@@ -144,4 +144,17 @@ class AuthController extends Controller
         return $this->success(__('auth.refresh.success'), $data)
             ->cookie($cookieFactory->make($rotated['plain_text_token']));
     }
+
+    public function logout(
+        RefreshTokenRequest $request,
+        RefreshTokenService $refreshTokenService,
+        RefreshTokenCookieFactory $cookieFactory,
+    ): JsonResponse {
+        $payload = $request->validated();
+
+        $refreshTokenService->revoke($payload['refresh_token']);
+
+        return $this->success(__('auth.logout.success'))
+            ->cookie($cookieFactory->forget());
+    }
 }

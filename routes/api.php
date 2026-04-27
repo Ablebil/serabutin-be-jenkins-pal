@@ -9,5 +9,6 @@ Route::prefix('v1')->group(function () {
         Route::get('/verify', [AuthController::class, 'verify']);
         Route::post('/login', [AuthController::class, 'login']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
+        Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth.jwt');
     });
 });

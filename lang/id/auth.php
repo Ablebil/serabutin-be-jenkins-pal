@@ -19,6 +19,9 @@ return [
         'success' => 'Token berhasil diperbarui.',
         'invalid_or_expired' => 'Refresh token tidak valid atau sudah kedaluwarsa.',
     ],
+    'logout' => [
+        'success' => 'Logout berhasil.',
+    ],
     'mail' => [
         'verify_subject' => 'Verifikasi Email Akun Serabutin',
         'verify_greeting' => 'Halo, :name',
