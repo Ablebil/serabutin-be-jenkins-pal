@@ -114,4 +114,41 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | JWT Authentication
+    |--------------------------------------------------------------------------
+    |
+    | Centralized settings for access token generation and verification.
+    |
+    */
+
+    'jwt' => [
+        'secret' => env('JWT_SECRET'),
+        'issuer' => env('JWT_ISSUER', env('APP_URL')),
+        'audience' => env('JWT_AUDIENCE', env('APP_URL')),
+        'access_ttl_seconds' => (int) env('JWT_ACCESS_TTL_SECONDS', 900),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Refresh Token Authentication
+    |--------------------------------------------------------------------------
+    |
+    | Settings for opaque refresh token lifetime and cookie transport.
+    |
+    */
+
+    'refresh_token' => [
+        'ttl_seconds' => (int) env('AUTH_REFRESH_TTL_SECONDS', 86400),
+        'cookie' => [
+            'name' => env('AUTH_COOKIE_NAME', 'refresh_token'),
+            'path' => env('AUTH_COOKIE_PATH', '/api/v1/auth'),
+            'domain' => env('AUTH_COOKIE_DOMAIN'),
+            'secure' => (bool) env('AUTH_COOKIE_SECURE', true),
+            'http_only' => (bool) env('AUTH_COOKIE_HTTP_ONLY', true),
+            'same_site' => env('AUTH_COOKIE_SAME_SITE', 'lax'),
+        ],
+    ],
+
 ];
