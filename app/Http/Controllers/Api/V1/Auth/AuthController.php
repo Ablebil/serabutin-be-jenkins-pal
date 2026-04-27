@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
+use App\Http\Requests\Api\V1\Auth\RefreshTokenRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use App\Http\Requests\Api\V1\Auth\VerifyEmailRequest;
 use App\Mail\VerifyEmailMail;
@@ -116,5 +117,31 @@ class AuthController extends Controller
 
         return $this->success(__('auth.login.success'), $data)
             ->cookie($cookieFactory->make($refreshToken['plain_text_token']));
+    }
+
+    public function refresh(
+        RefreshTokenRequest $request,
+        JwtService $jwtService,
+        RefreshTokenService $refreshTokenService,
+        RefreshTokenCookieFactory $cookieFactory,
+    ): JsonResponse {
+        $payload = $request->validated();
+
+        $rotated = $refreshTokenService->rotate($payload['refresh_token']);
+
+        if (is_null($rotated)) {
+            return $this->error(__('auth.refresh.invalid_or_expired'), 401);
+        }
+
+        $accessToken = $jwtService->issueAccessToken($rotated['user']);
+
+        $data = [
+            'access_token' => $accessToken['access_token'],
+            'token_type' => $accessToken['token_type'],
+            'expires_in' => $accessToken['expires_in'],
+        ];
+
+        return $this->success(__('auth.refresh.success'), $data)
+            ->cookie($cookieFactory->make($rotated['plain_text_token']));
     }
 }

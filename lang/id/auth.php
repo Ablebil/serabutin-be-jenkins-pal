@@ -15,6 +15,10 @@ return [
         'email_not_verified' => 'Silakan verifikasi email terlebih dahulu.',
         'account_inactive' => 'Akun tidak aktif.',
     ],
+    'refresh' => [
+        'success' => 'Token berhasil diperbarui.',
+        'invalid_or_expired' => 'Refresh token tidak valid atau sudah kedaluwarsa.',
+    ],
     'mail' => [
         'verify_subject' => 'Verifikasi Email Akun Serabutin',
         'verify_greeting' => 'Halo, :name',

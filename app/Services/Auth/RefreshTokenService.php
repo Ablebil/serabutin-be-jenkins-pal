@@ -62,10 +62,18 @@ class RefreshTokenService
             return null;
         }
 
+        if (!$user->is_active) {
+            $currentSession->delete();
+            return null;
+        }
+
         return DB::transaction(function () use ($currentSession, $user): array {
             $currentSession->delete();
 
-            return $this->issue($user);
+            $issued = $this->issue($user);
+            $issued['user'] = $user;
+
+            return $issued;
         });
     }
 
