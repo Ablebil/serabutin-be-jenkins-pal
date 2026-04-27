@@ -497,7 +497,7 @@ paths:
         - Auth
       summary: Login
       description: Authenticate a user. Access token is returned in the response body,
-        refresh token is set as an HttpOnly cookie.
+        refresh token (opaque random string) is set as an HttpOnly cookie.
       requestBody:
         required: true
         content:
@@ -520,11 +520,12 @@ paths:
           description: Login successful
           headers:
             Set-Cookie:
-              description: HttpOnly cookie containing the refresh token
+              description: HttpOnly cookie containing the refresh token. Secure and SameSite
+                values depend on environment configuration.
               schema:
                 type: string
-                example: refresh_token=abc123...; HttpOnly; Secure; SameSite=Strict;
-                  Path=/api/v1/auth/refresh; Max-Age=86400
+                example: refresh_token=abc123...; HttpOnly; Secure; SameSite=Lax;
+                  Path=/api/v1/auth; Max-Age=86400
           content:
             application/json:
               schema:
@@ -586,7 +587,8 @@ paths:
         - Auth
       summary: Refresh access token
       description: Rotate the refresh token and issue a new access token. The refresh
-        token is read automatically from the HttpOnly cookie.
+        token (opaque random string) is read automatically from the HttpOnly
+        cookie.
       parameters:
         - in: cookie
           name: refresh_token
@@ -599,11 +601,12 @@ paths:
           description: Token refreshed successfully
           headers:
             Set-Cookie:
-              description: HttpOnly cookie containing the new refresh token
+              description: HttpOnly cookie containing the new refresh token. Secure and
+                SameSite values depend on environment configuration.
               schema:
                 type: string
-                example: refresh_token=xyz789...; HttpOnly; Secure; SameSite=Strict;
-                  Path=/api/v1/auth/refresh; Max-Age=86400
+                example: refresh_token=xyz789...; HttpOnly; Secure; SameSite=Lax;
+                  Path=/api/v1/auth; Max-Age=86400
           content:
             application/json:
               schema:
@@ -660,11 +663,12 @@ paths:
           description: Logout successful
           headers:
             Set-Cookie:
-              description: Clears the refresh token cookie
+              description: Clears the refresh token cookie. Secure and SameSite values depend
+                on environment configuration.
               schema:
                 type: string
-                example: refresh_token=; HttpOnly; Secure; SameSite=Strict;
-                  Path=/api/v1/auth/refresh; Max-Age=0
+                example: refresh_token=; HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth;
+                  Max-Age=0
           content:
             application/json:
               schema:
