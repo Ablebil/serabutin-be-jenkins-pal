@@ -7,6 +7,7 @@ use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\RefreshTokenRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use App\Http\Requests\Api\V1\Auth\VerifyEmailRequest;
+use App\Http\Resources\Api\V1\Users\UserResource;
 use App\Mail\VerifyEmailMail;
 use App\Models\User;
 use App\Models\UserProfile;
@@ -56,7 +57,7 @@ class AuthController extends Controller
             return $user;
         });
 
-        return $this->success(__('auth.register.success'), $user->fresh(), 201);
+        return $this->success(__('auth.register.success'), new UserResource($user->fresh()), 201);
     }
 
     public function verify(VerifyEmailRequest $request, EmailVerificationTokenService $tokenService): JsonResponse
@@ -112,7 +113,7 @@ class AuthController extends Controller
             'access_token' => $accessToken['access_token'],
             'token_type' => $accessToken['token_type'],
             'expires_in' => $accessToken['expires_in'],
-            'user' => $user->fresh(),
+            'user' => new UserResource($user->fresh()),
         ];
 
         return $this->success(__('auth.login.success'), $data)

@@ -14,8 +14,6 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::prefix('users')->group(function (): void {
-        Route::get('/{id}', [UserController::class, 'show'])->middleware('auth.jwt.optional');
-
         Route::middleware('auth.jwt')->group(function (): void {
             Route::get('/me', [UserController::class, 'me']);
             Route::patch('/me', [UserController::class, 'update']);
@@ -23,5 +21,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/me/bids', [UserController::class, 'bidHistory'])->middleware('role:worker');
             Route::get('/me/assignments', [UserController::class, 'assignments'])->middleware('role:worker');
         });
+
+        Route::get('/{id}', [UserController::class, 'show'])->middleware('auth.jwt.optional');
     });
 });

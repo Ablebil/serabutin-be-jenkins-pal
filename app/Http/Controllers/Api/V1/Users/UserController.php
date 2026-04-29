@@ -7,6 +7,7 @@ use App\Http\Requests\Api\V1\Users\UpdateProfileRequest;
 use App\Http\Resources\Api\V1\Bids\BidResource;
 use App\Http\Resources\Api\V1\Jobs\JobResource;
 use App\Http\Resources\Api\V1\Users\PublicUserProfileResource;
+use App\Http\Resources\Api\V1\Users\PublicUserResource;
 use App\Http\Resources\Api\V1\Users\UserProfileResource;
 use App\Http\Resources\Api\V1\Users\UserResource;
 use App\Models\JobAssignment;
@@ -107,7 +108,7 @@ class UserController extends Controller
         return $this->success(
             __('users.show.success'),
             [
-                'user' => new UserResource($target),
+                'user' => new PublicUserResource($target),
                 'profile' => new PublicUserProfileResource($target->profile, $showPhone, $categoryRatings),
             ]
         );

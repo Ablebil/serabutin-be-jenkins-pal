@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1\Jobs;
 
+use App\Http\Resources\Api\V1\Users\PublicUserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -11,13 +12,7 @@ class JobResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'client' => $this->whenLoaded('client', fn() => [
-                'id' => $this->client->id,
-                'full_name' => $this->client->full_name,
-                'role' => $this->client->role,
-                'created_at' => $this->client->created_at,
-                'updated_at' => $this->client->updated_at,
-            ]),
+            'client' => $this->whenLoaded('client', fn() => new PublicUserResource($this->client)),
             'category' => $this->whenLoaded('category', fn() => [
                 'id' => $this->category->id,
                 'name' => $this->category->name,

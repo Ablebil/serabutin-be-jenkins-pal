@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1\Bids;
 
+use App\Http\Resources\Api\V1\Users\PublicUserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -11,13 +12,7 @@ class BidResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'worker' => $this->whenLoaded('worker', fn() => [
-                'id' => $this->worker->id,
-                'full_name' => $this->worker->full_name,
-                'role' => $this->worker->role,
-                'created_at' => $this->worker->created_at,
-                'updated_at' => $this->worker->updated_at,
-            ]),
+            'worker' => $this->whenLoaded('worker', fn() => new PublicUserResource($this->worker)),
             'proposed_price' => $this->proposed_price,
             'estimated_duration_hours' => $this->estimated_duration_hours,
             'message' => $this->message,
