@@ -118,19 +118,19 @@ class UserController extends Controller
         $user = $request->attributes->get('auth_user');
 
         $query = $user->postedJobs()
-            ->with('category')
+            ->with(['client', 'category'])
             ->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
 
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->input('category_id'));
+        if ($request->filled('category_slug')) {
+            $query->whereHas('category', fn($q) => $q->where('slug', $request->input('category_slug')));
         }
 
         $paginator = $query->paginate(
-            perPage: (int) $request->input('per_page', 15)
+            perPage: (int) $request->input('limit', 10)
         );
 
         return $this->paginated(
@@ -145,7 +145,7 @@ class UserController extends Controller
         $user = $request->attributes->get('auth_user');
 
         $query = $user->bids()
-            ->with('job')
+            ->with(['worker', 'job.category', 'job.client'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -153,12 +153,17 @@ class UserController extends Controller
         }
 
         $paginator = $query->paginate(
-            perPage: (int) $request->input('per_page', 15)
+            perPage: (int) $request->input('limit', 10)
         );
+
+        $items = $paginator->getCollection()->map(fn($bid) => [
+            'bid' => new BidResource($bid),
+            'job' => new JobResource($bid->job),
+        ]);
 
         return $this->paginated(
             __('users.bid_history.success'),
-            BidResource::collection($paginator),
+            $items,
             $paginator
         );
     }
@@ -168,22 +173,19 @@ class UserController extends Controller
         $user = $request->attributes->get('auth_user');
 
         $query = $user->assignments()
-            ->with(['job.category'])
-            ->join('jobs', 'job_assignments.job_id', '=', 'jobs.id')
-            ->select('job_assignments.*')
-            ->orderBy('job_assignments.created_at', 'desc');
+            ->with(['job.category', 'job.client'])
+            ->latest();
 
         if ($request->filled('status')) {
-            $query->where('jobs.status', $request->input('status'));
+            $query->whereHas('job', fn($q) => $q->where('status', $request->input('status')));
         }
 
         if ($request->filled('category_slug')) {
-            $query->join('categories', 'jobs.category_id', '=', 'categories.id')
-                ->where('categories.slug', $request->input('category_slug'));
+            $query->whereHas('job.category', fn($q) => $q->where('slug', $request->input('category_slug')));
         }
 
         $paginator = $query->paginate(
-            perPage: (int) $request->input('per_page', 15)
+            perPage: (int) $request->input('limit', 10)
         );
 
         $jobs = $paginator->getCollection()->map(fn($assignment) => $assignment->job);

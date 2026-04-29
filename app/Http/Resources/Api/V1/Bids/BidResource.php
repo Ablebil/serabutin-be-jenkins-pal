@@ -11,9 +11,13 @@ class BidResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'job_id' => $this->job_id,
-            'job_title' => $this->whenLoaded('job', fn() => $this->job->title),
-            'worker_id' => $this->worker_id,
+            'worker' => $this->whenLoaded('worker', fn() => [
+                'id' => $this->worker->id,
+                'full_name' => $this->worker->full_name,
+                'role' => $this->worker->role,
+                'created_at' => $this->worker->created_at,
+                'updated_at' => $this->worker->updated_at,
+            ]),
             'proposed_price' => $this->proposed_price,
             'estimated_duration_hours' => $this->estimated_duration_hours,
             'message' => $this->message,
