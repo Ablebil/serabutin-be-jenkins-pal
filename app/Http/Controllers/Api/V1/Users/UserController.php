@@ -54,12 +54,18 @@ class UserController extends Controller
             $user->save();
         }
 
-        $profileFields = array_intersect_key($payload, array_flip([
+        $allowedProfileFields = [
             'bio',
             'location_district',
             'location_city',
-            'phone',
-        ]));
+            'avatar_url',
+        ];
+
+        if ($user->role === 'worker') {
+            $allowedProfileFields[] = 'phone';
+        }
+
+        $profileFields = array_intersect_key($payload, array_flip($allowedProfileFields));
 
         if (!empty($profileFields)) {
             $user->profile()->update($profileFields);
@@ -68,11 +74,15 @@ class UserController extends Controller
         $user->loadMissing('profile');
         $user->profile->refresh();
 
+        $categoryRatings = $user->role === 'worker'
+            ? $this->profileSummary->getCategoryRatings($user)
+            : null;
+
         return $this->success(
             __('users.update.success'),
             [
                 'user' => new UserResource($user),
-                'profile' => new UserProfileResource($user->profile),
+                'profile' => new UserProfileResource($user->profile, $categoryRatings),
             ]
         );
     }

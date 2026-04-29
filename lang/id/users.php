@@ -43,6 +43,8 @@ return [
         'location_district_max' => 'Kecamatan maksimal 100 karakter.',
         'location_city_string' => 'Kota harus berupa teks.',
         'location_city_max' => 'Kota maksimal 100 karakter.',
+        'avatar_url_url' => 'URL avatar tidak valid.',
+        'avatar_url_max' => 'URL avatar maksimal 255 karakter.',
         'phone_string' => 'Nomor telepon harus berupa teks.',
         'phone_max' => 'Nomor telepon maksimal 20 karakter.',
     ],

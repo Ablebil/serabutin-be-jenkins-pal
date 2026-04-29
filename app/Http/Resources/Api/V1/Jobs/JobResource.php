@@ -13,14 +13,7 @@ class JobResource extends JsonResource
         return [
             'id' => $this->id,
             'client' => $this->whenLoaded('client', fn() => new PublicUserResource($this->client)),
-            'category' => $this->whenLoaded('category', fn() => [
-                'id' => $this->category->id,
-                'name' => $this->category->name,
-                'slug' => $this->category->slug,
-                'is_active' => $this->category->is_active,
-                'created_at' => $this->category->created_at,
-                'updated_at' => $this->category->updated_at,
-            ]),
+            'category' => $this->whenLoaded('category', fn() => new CategoryResource($this->category)),
             'title' => $this->title,
             'description' => $this->description,
             'budget_min' => $this->budget_min,
