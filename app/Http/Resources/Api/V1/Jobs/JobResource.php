@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1\Jobs;
 
+use App\Http\Resources\Api\V1\Categories\CategoryResource;
 use App\Http\Resources\Api\V1\Users\PublicUserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
