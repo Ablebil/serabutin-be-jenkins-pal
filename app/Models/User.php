@@ -99,6 +99,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all job assignments for this worker.
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(JobAssignment::class, 'worker_id');
+    }
+
+    /**
      * Get all refresh token sessions for the user.
      */
     public function refreshTokens(): HasMany

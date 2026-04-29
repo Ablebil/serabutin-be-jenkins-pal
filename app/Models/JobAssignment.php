@@ -53,4 +53,12 @@ class JobAssignment extends Model
     {
         return $this->belongsTo(User::class, 'client_id');
     }
+
+    /**
+     * Get the job this assignment belongs to.
+     */
+    public function job(): BelongsTo
+    {
+        return $this->belongsTo(Job::class);
+    }
 }

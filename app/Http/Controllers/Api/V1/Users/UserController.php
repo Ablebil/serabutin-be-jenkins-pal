@@ -163,7 +163,35 @@ class UserController extends Controller
         );
     }
 
-    public function assignments()
+    public function assignments(Request $request): JsonResponse
     {
+        $user = $request->attributes->get('auth_user');
+
+        $query = $user->assignments()
+            ->with(['job.category'])
+            ->join('jobs', 'job_assignments.job_id', '=', 'jobs.id')
+            ->select('job_assignments.*')
+            ->orderBy('job_assignments.created_at', 'desc');
+
+        if ($request->filled('status')) {
+            $query->where('jobs.status', $request->input('status'));
+        }
+
+        if ($request->filled('category_slug')) {
+            $query->join('categories', 'jobs.category_id', '=', 'categories.id')
+                ->where('categories.slug', $request->input('category_slug'));
+        }
+
+        $paginator = $query->paginate(
+            perPage: (int) $request->input('per_page', 15)
+        );
+
+        $jobs = $paginator->getCollection()->map(fn($assignment) => $assignment->job);
+
+        return $this->paginated(
+            __('users.assignments.success'),
+            JobResource::collection($jobs),
+            $paginator
+        );
     }
 }

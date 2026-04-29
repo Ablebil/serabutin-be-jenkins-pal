@@ -21,6 +21,7 @@ Route::prefix('v1')->group(function () {
             Route::patch('/me', [UserController::class, 'update']);
             Route::get('/me/jobs', [UserController::class, 'postedJobs'])->middleware('role:client');
             Route::get('/me/bids', [UserController::class, 'bidHistory'])->middleware('role:worker');
+            Route::get('/me/assignments', [UserController::class, 'assignments'])->middleware('role:worker');
         });
     });
 });
