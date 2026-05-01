@@ -7,6 +7,7 @@ use App\Models\RefreshToken;
 use App\Models\User;
 use App\Services\Auth\EmailVerificationTokenService;
 use App\Services\Auth\RefreshTokenService;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -94,7 +95,7 @@ class AuthFlowTest extends TestCase
 
     public function test_verify_marks_user_as_verified_for_valid_token(): void
     {
-        $user = $this->createUser([
+        $user = UserFactory::new()->create([
             'email' => 'verify@example.com',
             'is_verified' => false,
         ]);
@@ -116,9 +117,8 @@ class AuthFlowTest extends TestCase
 
     public function test_login_returns_access_token_and_refresh_cookie(): void
     {
-        $user = $this->createUser([
+        $user = UserFactory::new()->create([
             'email' => 'login@example.com',
-            'password_hash' => 'secret12345',
             'is_verified' => true,
             'is_active' => true,
             'role' => 'client',
@@ -145,9 +145,8 @@ class AuthFlowTest extends TestCase
 
     public function test_login_rejects_unverified_user(): void
     {
-        $user = $this->createUser([
+        $user = UserFactory::new()->create([
             'email' => 'unverified@example.com',
-            'password_hash' => 'secret12345',
             'is_verified' => false,
             'is_active' => true,
         ]);
@@ -165,9 +164,8 @@ class AuthFlowTest extends TestCase
 
     public function test_refresh_rotates_token_and_rejects_replay_of_old_refresh_token(): void
     {
-        $user = $this->createUser([
+        $user = UserFactory::new()->create([
             'email' => 'refresh@example.com',
-            'password_hash' => 'secret12345',
             'is_verified' => true,
             'is_active' => true,
         ]);
@@ -223,9 +221,8 @@ class AuthFlowTest extends TestCase
 
     public function test_logout_revokes_refresh_token_and_clears_cookie(): void
     {
-        $user = $this->createUser([
+        $user = UserFactory::new()->create([
             'email' => 'logout@example.com',
-            'password_hash' => 'secret12345',
             'is_verified' => true,
             'is_active' => true,
         ]);
@@ -279,9 +276,8 @@ class AuthFlowTest extends TestCase
 
     public function test_login_limits_active_sessions_to_three_and_revokes_oldest(): void
     {
-        $user = $this->createUser([
+        $user = UserFactory::new()->create([
             'email' => 'session-limit@example.com',
-            'password_hash' => 'secret12345',
             'is_verified' => true,
             'is_active' => true,
         ]);
@@ -421,15 +417,4 @@ class AuthFlowTest extends TestCase
         }
     }
 
-    private function createUser(array $attributes = []): User
-    {
-        return User::query()->create(array_merge([
-            'email' => 'default@example.com',
-            'password_hash' => 'secret12345',
-            'full_name' => 'Default User',
-            'role' => 'worker',
-            'is_verified' => true,
-            'is_active' => true,
-        ], $attributes));
-    }
 }
