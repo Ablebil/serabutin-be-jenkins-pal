@@ -968,6 +968,141 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /users/me/assignments:
+    get:
+      tags:
+        - Users
+      summary: Get authenticated worker's assignments
+      description: Returns a paginated list of jobs that the currently authenticated
+        worker has been assigned to. Supports filtering by category and status.
+        Accessible by workers only.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number.
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of items per page.
+          example: 10
+        - in: query
+          name: category_slug
+          schema:
+            type: string
+          description: Filter by category slug of the job.
+          example: bebersih
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [ in_progress, completed ]
+          description: Filter by job status.
+          example: completed
+      responses:
+        "200":
+          description: Assignments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Daftar assignment berhasil diambil.
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/JobObject"
+                  meta:
+                    $ref: "#/components/schemas/PaginatedMeta"
+        "401":
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Tidak terautentikasi.
+        "403":
+          description: Forbidden. Accessible by workers only.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Akses ditolak.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /users/me/reviews:
+    get:
+      tags:
+        - Users
+      summary: Get authenticated user's received reviews
+      description: Returns a paginated list of reviews received by the currently
+        authenticated user.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number.
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of reviews per page.
+          example: 10
+      responses:
+        "200":
+          description: Reviews retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Daftar review berhasil diambil.
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ReviewObject"
+                  meta:
+                    $ref: "#/components/schemas/PaginatedMeta"
+        "401":
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Tidak terautentikasi.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /users/{id}:
     get:
       tags:
@@ -1028,6 +1163,198 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+
+
+  /users/{id}/jobs:
+    get:
+      tags:
+        - Users
+      summary: List public jobs posted by a user
+      description: Returns a paginated list of jobs posted by a specific user.
+        Only accessible for client users. Can be filtered by status and category.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: User ID
+          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number.
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of jobs per page.
+          example: 10
+        - in: query
+          name: category_slug
+          schema:
+            type: string
+          description: Filter by category slug.
+          example: bebersih
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [ open, in_progress, completed ]
+          description: Filter by job status.
+          example: open
+      responses:
+        "200":
+          description: Jobs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Daftar pekerjaan berhasil diambil.
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/JobObject"
+                  meta:
+                    $ref: "#/components/schemas/PaginatedMeta"
+        "401":
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Tidak terautentikasi.
+        "403":
+          description: Forbidden. User is not a client.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Pengguna ini bukan client.
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Pengguna tidak ditemukan.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /users/{id}/assignments:
+    get:
+      tags:
+        - Users
+      summary: List public assignments of a worker
+      description: Returns a paginated list of jobs that a specific worker has
+        been assigned to. Only accessible for worker users. Supports filtering
+        by category and status.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: User ID
+          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number.
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of items per page.
+          example: 10
+        - in: query
+          name: category_slug
+          schema:
+            type: string
+          description: Filter by category slug of the job.
+          example: bebersih
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [ in_progress, completed ]
+          description: Filter by job status.
+          example: completed
+      responses:
+        "200":
+          description: Assignments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Daftar pekerjaan berhasil diambil.
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/JobObject"
+                  meta:
+                    $ref: "#/components/schemas/PaginatedMeta"
+        "401":
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Tidak terautentikasi.
+        "403":
+          description: Forbidden. User is not a worker.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Pengguna ini bukan worker.
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Pengguna tidak ditemukan.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   # categories module
   /categories:
     get:
@@ -1916,87 +2243,6 @@ paths:
                 message: Bid ini sudah tidak bisa ditarik.
         "500":
           $ref: "#/components/responses/InternalServerError"
-
-  # assignments module
-  /users/me/assignments:
-    get:
-      tags:
-        - Assignments
-      summary: Get authenticated worker's assignments
-      description: Returns a paginated list of jobs that the currently authenticated
-        worker has been assigned to. Supports filtering by category and status.
-        Accessible by workers only.
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-            default: 1
-          description: Page number.
-          example: 1
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            default: 10
-          description: Number of items per page.
-          example: 10
-        - in: query
-          name: category_slug
-          schema:
-            type: string
-          description: Filter by category slug of the job.
-          example: bebersih
-        - in: query
-          name: status
-          schema:
-            type: string
-            enum: [ in_progress, completed ]
-          description: Filter by job status.
-          example: completed
-      responses:
-        "200":
-          description: Assignments retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: success
-                  message:
-                    type: string
-                    example: Daftar assignment berhasil diambil.
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/JobObject"
-                  meta:
-                    $ref: "#/components/schemas/PaginatedMeta"
-        "401":
-          description: Unauthenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Tidak terautentikasi.
-        "403":
-          description: Forbidden. Accessible by workers only.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Akses ditolak.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
   # reviews module
   /jobs/{id}/reviews:
     post:
@@ -2102,79 +2348,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationErrorResponse"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /users/{id}/reviews:
-    get:
-      tags:
-        - Reviews
-      summary: List reviews received by a user
-      description: Returns a paginated list of reviews received by a specific user.
-        Used to display review history on a user's profile page.
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: User ID
-          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
-        - in: query
-          name: page
-          schema:
-            type: integer
-            default: 1
-          description: Page number.
-          example: 1
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            default: 10
-          description: Number of reviews per page.
-          example: 10
-      responses:
-        "200":
-          description: Reviews retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: success
-                  message:
-                    type: string
-                    example: Daftar review berhasil diambil.
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/ReviewObject"
-                  meta:
-                    $ref: "#/components/schemas/PaginatedMeta"
-        "401":
-          description: Unauthenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Tidak terautentikasi.
-        "404":
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Pengguna tidak ditemukan.
         "500":
           $ref: "#/components/responses/InternalServerError"
 
