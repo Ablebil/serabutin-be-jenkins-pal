@@ -142,9 +142,25 @@ class JobController extends Controller
         );
     }
 
-    public function destroy(): JsonResponse
+    public function destroy(Request $request, string $id): JsonResponse
     {
-        return $this->success('Job deleted');
+        $job = Job::find($id);
+
+        if (is_null($job) || !is_null($job->deleted_at)) {
+            return $this->error(__('jobs.show.not_found'), 404);
+        }
+
+        if ($job->client_id !== $request->attributes->get('auth_user')->id) {
+            return $this->error(__('auth.jwt.forbidden'), 403);
+        }
+
+        if ($job->status !== 'open') {
+            return $this->error(__('jobs.delete.not_open'), 403);
+        }
+
+        $job->delete();
+
+        return $this->success(__('jobs.destroy.success'));
     }
 
     public function updateStatus(): JsonResponse

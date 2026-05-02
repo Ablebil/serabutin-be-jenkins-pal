@@ -17,6 +17,7 @@ return [
     ],
     'destroy' => [
         'success' => 'Pekerjaan berhasil dihapus.',
+        'not_open' => 'Pekerjaan tidak dalam status open.',
     ],
     'status' => [
         'success' => 'Status pekerjaan berhasil diperbarui.',
