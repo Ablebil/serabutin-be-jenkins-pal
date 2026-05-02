@@ -1163,15 +1163,13 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-
-
   /users/{id}/jobs:
     get:
       tags:
         - Users
       summary: List public jobs posted by a user
-      description: Returns a paginated list of jobs posted by a specific user.
-        Only accessible for client users. Can be filtered by status and category.
+      description: Returns a paginated list of jobs posted by a specific user. Only
+        accessible for client users. Can be filtered by status and category.
       security:
         - BearerAuth: []
       parameters:
@@ -1265,9 +1263,9 @@ paths:
       tags:
         - Users
       summary: List public assignments of a worker
-      description: Returns a paginated list of jobs that a specific worker has
-        been assigned to. Only accessible for worker users. Supports filtering
-        by category and status.
+      description: Returns a paginated list of jobs that a specific worker has been
+        assigned to. Only accessible for worker users. Supports filtering by
+        category and status.
       security:
         - BearerAuth: []
       parameters:
@@ -1355,6 +1353,79 @@ paths:
                 message: Pengguna tidak ditemukan.
         "500":
           $ref: "#/components/responses/InternalServerError"
+
+  /users/{id}/reviews:
+    get:
+      tags:
+        - Users
+      summary: List public reviews of a user
+      description: Returns a paginated list of reviews received by a specific user.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: User ID
+          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number.
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of reviews per page.
+          example: 10
+      responses:
+        "200":
+          description: Reviews retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Daftar review berhasil diambil.
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ReviewObject"
+                  meta:
+                    $ref: "#/components/schemas/PaginatedMeta"
+        "401":
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Tidak terautentikasi.
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Pengguna tidak ditemukan.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   # categories module
   /categories:
     get:
@@ -2243,6 +2314,7 @@ paths:
                 message: Bid ini sudah tidak bisa ditarik.
         "500":
           $ref: "#/components/responses/InternalServerError"
+
   # reviews module
   /jobs/{id}/reviews:
     post:
