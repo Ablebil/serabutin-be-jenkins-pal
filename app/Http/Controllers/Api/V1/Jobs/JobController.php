@@ -98,9 +98,20 @@ class JobController extends Controller
         );
     }
 
-    public function show(): JsonResponse
+    public function show(string $id): JsonResponse
     {
-        return $this->success('Job detail');
+        $job = Job::with(['client', 'category'])
+            ->where('id', $id)
+            ->first();
+
+        if (is_null($job) || !is_null($job->deleted_at)) {
+            return $this->error(__('jobs.show.not_found'), 404);
+        }
+
+        return $this->success(
+            __('jobs.show.success'),
+            new JobResource($job)
+        );
     }
 
     public function update(): JsonResponse
