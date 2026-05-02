@@ -21,5 +21,6 @@ return [
     ],
     'status' => [
         'success' => 'Status pekerjaan berhasil diperbarui.',
+        'not_in_progress' => 'Pekerjaan tidak dalam status in_progress.',
     ],
 ];

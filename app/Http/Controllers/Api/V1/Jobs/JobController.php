@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Jobs;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Jobs\StoreJobRequest;
 use App\Http\Requests\Api\V1\Jobs\UpdateJobRequest;
+use App\Http\Requests\Api\V1\Jobs\UpdateJobStatusRequest;
 use App\Http\Resources\Api\V1\Jobs\JobResource;
 use App\Models\Job;
 use App\Services\Users\ProfileSummaryService;
@@ -163,8 +164,41 @@ class JobController extends Controller
         return $this->success(__('jobs.destroy.success'));
     }
 
-    public function updateStatus(): JsonResponse
+    public function updateStatus(UpdateJobStatusRequest $request, string $id): JsonResponse
     {
-        return $this->success('Job status updated');
+        $job = Job::with(['assignments.worker.profile'])->find($id);
+
+        if (is_null($job) || !is_null($job->deleted_at)) {
+            return $this->error(__('jobs.show.not_found'), 404);
+        }
+
+        if ($job->client_id !== $request->attributes->get('auth_user')->id) {
+            return $this->error(__('auth.jwt.forbidden'), 403);
+        }
+
+        if ($job->status !== 'in_progress') {
+            return $this->error(__('jobs.status.not_in_progress'), 403);
+        }
+
+        $newStatus = $request->validated()['status'];
+
+        if ($newStatus === 'completed') {
+            DB::transaction(function () use ($job) {
+                $job->update(['status' => 'completed']);
+
+                foreach ($job->assignments as $assignment) {
+                    $this->profileSummary->refreshJobCounts($assignment->worker);
+                }
+            });
+        } else {
+            $job->update(['status' => $newStatus]);
+        }
+
+        $job->load(['client', 'category']);
+
+        return $this->success(
+            __('jobs.status.success'),
+            new JobResource($job)
+        );
     }
 }
