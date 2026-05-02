@@ -176,6 +176,26 @@ components:
           type: integer
           description: Worker only. Always 0 for client.
           example: 35
+        category_ratings:
+          type: array
+          description: Worker only. Rating breakdown per category. Not present for client.
+          items:
+            type: object
+            properties:
+              category_id:
+                type: string
+                format: uuid
+                example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+              category_name:
+                type: string
+                example: Bebersih
+              avg_rating:
+                type: number
+                format: float
+                example: 4.8
+              review_count:
+                type: integer
+                example: 10
         created_at:
           type: string
           format: date-time
@@ -723,6 +743,72 @@ paths:
                         $ref: "#/components/schemas/UserObject"
                       profile:
                         $ref: "#/components/schemas/UserProfileObject"
+              examples:
+                client_example:
+                  summary: Client profile (no category ratings)
+                  value:
+                    status: success
+                    message: Profil berhasil diambil.
+                    data:
+                      user:
+                        id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        email: client@example.com
+                        full_name: Jane Client
+                        role: client
+                        is_verified: true
+                        is_active: true
+                        created_at: "2025-04-25T10:00:00Z"
+                        updated_at: "2025-04-25T10:00:00Z"
+                      profile:
+                        id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        user_id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        bio: null
+                        location_district: Lowokwaru
+                        location_city: Kota Malang
+                        avatar_url: https://storage.serabutin.com/avatars/default.png
+                        phone: "081234567890"
+                        avg_rating: 4.5
+                        total_jobs_posted: 12
+                        total_jobs_completed: 0
+                        created_at: "2025-04-25T10:00:00Z"
+                        updated_at: "2025-04-25T10:00:00Z"
+                worker_example:
+                  summary: Worker profile (with category ratings)
+                  value:
+                    status: success
+                    message: Profil berhasil diambil.
+                    data:
+                      user:
+                        id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        email: worker@example.com
+                        full_name: John Worker
+                        role: worker
+                        is_verified: false
+                        is_active: true
+                        created_at: "2025-04-25T10:00:00Z"
+                        updated_at: "2025-04-25T10:00:00Z"
+                      profile:
+                        id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        user_id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        bio: Tukang bersih-bersih profesional berpengalaman 5 tahun.
+                        location_district: Lowokwaru
+                        location_city: Kota Malang
+                        avatar_url: https://storage.serabutin.com/avatars/worker.png
+                        phone: null
+                        avg_rating: 4.8
+                        total_jobs_posted: 0
+                        total_jobs_completed: 35
+                        category_ratings:
+                          - category_id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                            category_name: Bebersih
+                            avg_rating: 4.9
+                            review_count: 20
+                          - category_id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                            category_name: Servis AC
+                            avg_rating: 4.5
+                            review_count: 15
+                        created_at: "2025-04-25T10:00:00Z"
+                        updated_at: "2025-04-25T10:00:00Z"
         "401":
           description: Unauthenticated
           content:
@@ -1142,6 +1228,66 @@ paths:
                         $ref: "#/components/schemas/PublicUserObject"
                       profile:
                         $ref: "#/components/schemas/UserProfileObject"
+              examples:
+                client_example:
+                  summary: Client profile (no category ratings)
+                  value:
+                    status: success
+                    message: Profil berhasil diambil.
+                    data:
+                      user:
+                        id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        full_name: Jane Client
+                        role: client
+                        created_at: "2025-04-25T10:00:00Z"
+                        updated_at: "2025-04-25T10:00:00Z"
+                      profile:
+                        id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        user_id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        bio: null
+                        location_district: Lowokwaru
+                        location_city: Kota Malang
+                        avatar_url: https://storage.serabutin.com/avatars/default.png
+                        phone: null
+                        avg_rating: 4.5
+                        total_jobs_posted: 12
+                        total_jobs_completed: 0
+                        created_at: "2025-04-25T10:00:00Z"
+                        updated_at: "2025-04-25T10:00:00Z"
+                worker_example:
+                  summary: Worker profile (with category ratings)
+                  value:
+                    status: success
+                    message: Profil berhasil diambil.
+                    data:
+                      user:
+                        id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        full_name: John Worker
+                        role: worker
+                        created_at: "2025-04-25T10:00:00Z"
+                        updated_at: "2025-04-25T10:00:00Z"
+                      profile:
+                        id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        user_id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        bio: Tukang bersih-bersih profesional berpengalaman 5 tahun.
+                        location_district: Lowokwaru
+                        location_city: Kota Malang
+                        avatar_url: https://storage.serabutin.com/avatars/worker.png
+                        phone: "081234567890"
+                        avg_rating: 4.8
+                        total_jobs_posted: 0
+                        total_jobs_completed: 35
+                        category_ratings:
+                          - category_id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                            category_name: Bebersih
+                            avg_rating: 4.9
+                            review_count: 20
+                          - category_id: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                            category_name: Servis AC
+                            avg_rating: 4.5
+                            review_count: 15
+                        created_at: "2025-04-25T10:00:00Z"
+                        updated_at: "2025-04-25T10:00:00Z"
         "401":
           description: Unauthenticated
           content:
