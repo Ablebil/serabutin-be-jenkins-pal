@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Categories\CategoryController;
+use App\Http\Controllers\Api\V1\Uploads\UploadController;
 use App\Http\Controllers\Api\V1\Users\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,5 +35,9 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('categories')->group(function (): void {
         Route::get('/', [CategoryController::class, 'index']);
+    });
+
+    Route::prefix('uploads')->group(function (): void {
+        Route::post('/', [UploadController::class, 'store'])->middleware('auth.jwt');
     });
 });
