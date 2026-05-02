@@ -159,7 +159,10 @@ class JobController extends Controller
             return $this->error(__('jobs.delete.not_open'), 403);
         }
 
-        $job->delete();
+        DB::transaction(function () use ($job, $request) {
+            $job->delete();
+            $this->profileSummary->refreshJobCounts($request->attributes->get('auth_user'));
+        });
 
         return $this->success(__('jobs.destroy.success'));
     }
