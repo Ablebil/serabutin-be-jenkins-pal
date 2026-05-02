@@ -104,4 +104,12 @@ class Job extends Model
     {
         return $this->hasMany(Bid::class);
     }
+
+    /**
+     * Get the assignments for this job.
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(JobAssignment::class);
+    }
 }
