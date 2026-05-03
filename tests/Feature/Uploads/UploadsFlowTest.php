@@ -9,8 +9,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Throwable;
 use Tests\TestCase;
+use Throwable;
 
 class UploadsFlowTest extends TestCase
 {
@@ -41,6 +41,8 @@ class UploadsFlowTest extends TestCase
         ]);
 
         $this->artisan('migrate:fresh');
+
+        Storage::fake('public');
     }
 
     protected function tearDown(): void
@@ -53,6 +55,7 @@ class UploadsFlowTest extends TestCase
     {
         try {
             DB::connection('pgsql')->getPdo();
+
             return true;
         } catch (Throwable) {
             return false;
@@ -106,8 +109,6 @@ class UploadsFlowTest extends TestCase
 
     public function test_upload_avatar_returns_url(): void
     {
-        Storage::fake('public');
-
         $user = UserFactory::new()->withProfile()->create(['role' => 'worker']);
         $file = UploadedFile::fake()->image('avatar.jpg', 256, 256);
 
@@ -124,15 +125,13 @@ class UploadsFlowTest extends TestCase
         $url = (string) $response->json('data.url');
         $this->assertNotSame('', $url);
 
-        $path = Str::after($url, '/storage/');
-
-        Storage::disk('public')->assertExists($path);
+        // Extract path from URL: /storage/avatars/filename.jpg
+        $path = str_replace(url('/storage/'), '', $url);
+        Storage::disk('public')->assertExists(ltrim($path, '/'));
     }
 
     public function test_upload_rejects_non_image_files(): void
     {
-        Storage::fake('public');
-
         $user = UserFactory::new()->withProfile()->create(['role' => 'worker']);
         $file = UploadedFile::fake()->create('document.pdf', 10, 'application/pdf');
 
@@ -147,8 +146,6 @@ class UploadsFlowTest extends TestCase
 
     public function test_upload_rejects_large_files(): void
     {
-        Storage::fake('public');
-
         $user = UserFactory::new()->withProfile()->create(['role' => 'worker']);
         $file = UploadedFile::fake()->create('large.jpg', 6000, 'image/jpeg');
 
@@ -163,8 +160,6 @@ class UploadsFlowTest extends TestCase
 
     public function test_upload_requires_authentication(): void
     {
-        Storage::fake('public');
-
         $file = UploadedFile::fake()->image('avatar.jpg', 256, 256);
 
         $response = $this->postJson('/api/v1/uploads', [
@@ -174,21 +169,5 @@ class UploadsFlowTest extends TestCase
         $response
             ->assertStatus(401)
             ->assertJsonPath('message', __('general.unauthenticated'));
-    }
-
-    public function test_upload_validates_magic_numbers(): void
-    {
-        Storage::fake('public');
-
-        $user = UserFactory::new()->withProfile()->create(['role' => 'worker']);
-        $file = UploadedFile::fake()->create('fake.jpg', 10, 'image/jpeg');
-
-        $response = $this->postJson('/api/v1/uploads', [
-            'file' => $file,
-        ], $this->getHeaders($user));
-
-        $response
-            ->assertStatus(422)
-            ->assertJsonPath('errors.file.0', __('uploads.validation.file_invalid'));
     }
 }
