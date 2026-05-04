@@ -11,13 +11,18 @@ RUN apk add --no-cache \
     git \
     autoconf \
     g++ \
-    make
+    make \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev
 
-RUN docker-php-ext-install \
-    pdo \
-    pdo_pgsql \
-    zip \
-    opcache
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install \
+        pdo \
+        pdo_pgsql \
+        zip \
+        opcache \
+        gd
 
 RUN pecl install redis && docker-php-ext-enable redis
 
@@ -48,7 +53,11 @@ RUN apk add --no-cache \
     autoconf \
     g++ \
     make \
-    && docker-php-ext-install pdo pdo_pgsql zip opcache \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_pgsql zip opcache gd \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del libpq-dev libzip-dev autoconf g++ make
