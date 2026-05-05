@@ -7,7 +7,9 @@ use App\Http\Requests\Api\V1\Jobs\StoreJobRequest;
 use App\Http\Requests\Api\V1\Jobs\UpdateJobRequest;
 use App\Http\Requests\Api\V1\Jobs\UpdateJobStatusRequest;
 use App\Http\Resources\Api\V1\Jobs\JobResource;
+use App\Http\Resources\Api\V1\Users\PublicUserResource;
 use App\Models\Job;
+use App\Models\Review;
 use App\Services\Users\ProfileSummaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -203,5 +205,38 @@ class JobController extends Controller
             __('jobs.status.success'),
             new JobResource($job)
         );
+    }
+
+    public function getWorkers(Request $request, string $id): JsonResponse
+    {
+        $user = $request->attributes->get('auth_user');
+        $job = Job::with('assignments.worker')->find($id);
+
+        if (is_null($job) || !is_null($job->deleted_at)) {
+            return $this->error(__('jobs.show.not_found'), 404);
+        }
+
+        $isOwner = $job->client_id === $user->id;
+        $isAssignedWorker = $job->assignments()->where('worker_id', $user->id)->exists();
+
+        if (!$isOwner && !$isAssignedWorker) {
+            return $this->error(__('auth.jwt.forbidden'), 403);
+        }
+
+        $assignments = $job->assignments()->with('worker')->get();
+
+        $response = $assignments->map(function ($assignment) use ($user) {
+            $alreadyReviewed = Review::where('reviewer_id', $user->id)
+                ->where('assignment_id', $assignment->id)
+                ->exists();
+
+            return [
+                'assignment_id' => $assignment->id,
+                'worker' => PublicUserResource::make($assignment->worker),
+                'already_reviewed' => $alreadyReviewed,
+            ];
+        });
+
+        return $this->success(__('jobs.workers.success'), $response);
     }
 }

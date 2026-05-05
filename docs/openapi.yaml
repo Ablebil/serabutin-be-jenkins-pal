@@ -298,13 +298,6 @@ components:
           type: number
           format: float
           example: 90000
-        estimated_duration_hours:
-          type: integer
-          example: 3
-        message:
-          type: [ string, "null" ]
-          example: Saya tertarik mengambil pekerjaan ini karena berpengalaman di bidang
-            kebersihan.
         status:
           type: string
           enum: [ pending, accepted, rejected, withdrawn ]
@@ -2039,6 +2032,82 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /jobs/{id}/workers:
+    get:
+      tags:
+        - Jobs
+      summary: Get assigned workers for a job
+      description: Returns all workers assigned to a job. Accessible by the client who
+        posted the job or workers assigned to the job.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Job ID
+          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+      responses:
+        "200":
+          description: Workers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Daftar pekerja berhasil diambil.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        assignment_id:
+                          type: string
+                          format: uuid
+                          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+                        worker:
+                          $ref: "#/components/schemas/PublicUserObject"
+                        already_reviewed:
+                          type: boolean
+                          example: true
+        "401":
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Tidak terautentikasi.
+        "403":
+          description: Forbidden. Requester is not the job owner or an assigned worker.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Akses ditolak.
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Pekerjaan tidak ditemukan.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /jobs/{id}/status:
     patch:
       tags:
@@ -2224,20 +2293,11 @@ paths:
               type: object
               required:
                 - proposed_price
-                - estimated_duration_hours
               properties:
                 proposed_price:
                   type: number
                   minimum: 1
                   example: 90000
-                estimated_duration_hours:
-                  type: integer
-                  minimum: 1
-                  example: 3
-                message:
-                  type: string
-                  example: Saya tertarik mengambil pekerjaan ini karena berpengalaman di bidang
-                    kebersihan.
       responses:
         "201":
           description: Bid placed successfully

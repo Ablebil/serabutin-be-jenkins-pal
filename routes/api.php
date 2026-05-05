@@ -37,7 +37,7 @@ Route::prefix('v1')->group(function () {
     Route::prefix('categories')->group(function (): void {
         Route::get('/', [CategoryController::class, 'index']);
     });
-  
+
     Route::prefix('jobs')->middleware('auth.jwt')->group(function (): void {
         Route::get('/', [JobController::class, 'index']);
         Route::post('/', [JobController::class, 'store'])->middleware('role:client');
@@ -46,6 +46,7 @@ Route::prefix('v1')->group(function () {
             Route::patch('/', [JobController::class, 'update'])->middleware('role:client');
             Route::delete('/', [JobController::class, 'destroy'])->middleware('role:client');
             Route::patch('/status', [JobController::class, 'updateStatus'])->middleware('role:client');
+            Route::get('/workers', [JobController::class, 'getWorkers']);
         });
     });
 
