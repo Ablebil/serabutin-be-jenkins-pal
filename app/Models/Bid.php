@@ -21,8 +21,6 @@ class Bid extends Model
         'job_id',
         'worker_id',
         'proposed_price',
-        'estimated_duration_hours',
-        'message',
         'status',
     ];
 
@@ -48,8 +46,7 @@ class Bid extends Model
     protected function casts(): array
     {
         return [
-            'proposed_price'           => 'decimal:2',
-            'estimated_duration_hours' => 'integer',
+            'proposed_price' => 'decimal:2',
         ];
     }
 

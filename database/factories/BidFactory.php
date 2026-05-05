@@ -13,8 +13,6 @@ class BidFactory extends Factory
     {
         return [
             'proposed_price' => fake()->numberBetween(1000, 10000),
-            'estimated_duration_hours' => fake()->numberBetween(1, 8),
-            'message' => fake()->optional()->sentence(),
             'status' => 'pending',
         ];
     }
