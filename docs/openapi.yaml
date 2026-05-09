@@ -71,7 +71,7 @@ components:
       type: object
       properties:
         next_cursor:
-          type: [ string, "null" ]
+          type: [string, "null"]
           example: eyJpZCI6IjAxOTMyYjJhIn0=
         per_page:
           type: integer
@@ -96,7 +96,7 @@ components:
           example: John Doe
         role:
           type: string
-          enum: [ client, worker ]
+          enum: [client, worker]
           example: worker
         is_verified:
           type: boolean
@@ -125,7 +125,7 @@ components:
           example: John Doe
         role:
           type: string
-          enum: [ client, worker ]
+          enum: [client, worker]
           example: worker
         created_at:
           type: string
@@ -148,20 +148,21 @@ components:
           format: uuid
           example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
         bio:
-          type: [ string, "null" ]
+          type: [string, "null"]
           example: Tukang bersih-bersih profesional berpengalaman 5 tahun.
         location_district:
-          type: [ string, "null" ]
+          type: [string, "null"]
           example: Lowokwaru
         location_city:
-          type: [ string, "null" ]
+          type: [string, "null"]
           example: Kota Malang
         avatar_url:
-          type: [ string, "null" ]
+          type: [string, "null"]
           example: https://storage.serabutin.com/avatars/default.png
         phone:
-          type: [ string, "null" ]
-          description: Worker only. Null if the requester has no accepted bid with this
+          type: [string, "null"]
+          description:
+            Worker only. Null if the requester has no accepted bid with this
             worker.
           example: "081234567890"
         avg_rating:
@@ -266,7 +267,7 @@ components:
           example: Kota Malang
         status:
           type: string
-          enum: [ open, in_progress, completed, cancelled ]
+          enum: [open, in_progress, completed, cancelled]
           example: open
         start_at:
           type: string
@@ -300,7 +301,7 @@ components:
           example: 90000
         status:
           type: string
-          enum: [ pending, accepted, rejected, withdrawn ]
+          enum: [pending, accepted, rejected, withdrawn]
           example: pending
         created_at:
           type: string
@@ -335,7 +336,7 @@ components:
           maximum: 5
           example: 4
         comment:
-          type: [ string, "null" ]
+          type: [string, "null"]
           example: Pekerja ramah dan hasil kerjanya memuaskan.
         created_at:
           type: string
@@ -351,7 +352,7 @@ components:
           example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
         type:
           type: string
-          enum: [ bid_accepted, bid_rejected ]
+          enum: [bid_accepted, bid_rejected]
           example: bid_accepted
         job_id:
           type: string
@@ -400,7 +401,8 @@ paths:
       tags:
         - Auth
       summary: Register a new user
-      description: Register a new user as client or worker. A verification email will
+      description:
+        Register a new user as client or worker. A verification email will
         be sent after successful registration.
       requestBody:
         required: true
@@ -427,7 +429,7 @@ paths:
                   example: John Doe
                 role:
                   type: string
-                  enum: [ client, worker ]
+                  enum: [client, worker]
                   example: worker
       responses:
         "201":
@@ -470,7 +472,8 @@ paths:
       tags:
         - Auth
       summary: Verify email address
-      description: Called by the frontend after the user clicks the verification link
+      description:
+        Called by the frontend after the user clicks the verification link
         in their email. The token is extracted from the URL query param and sent
         to this endpoint.
       parameters:
@@ -512,7 +515,8 @@ paths:
       tags:
         - Auth
       summary: Login
-      description: Authenticate a user. Access token is returned in the response body,
+      description:
+        Authenticate a user. Access token is returned in the response body,
         refresh token (opaque random string) is set as an HttpOnly cookie.
       requestBody:
         required: true
@@ -536,11 +540,13 @@ paths:
           description: Login successful
           headers:
             Set-Cookie:
-              description: HttpOnly cookie containing the refresh token. Secure and SameSite
+              description:
+                HttpOnly cookie containing the refresh token. Secure and SameSite
                 values depend on environment configuration.
               schema:
                 type: string
-                example: refresh_token=abc123...; HttpOnly; Secure; SameSite=Lax;
+                example:
+                  refresh_token=abc123...; HttpOnly; Secure; SameSite=Lax;
                   Path=/api/v1/auth; Max-Age=86400
           content:
             application/json:
@@ -602,7 +608,8 @@ paths:
       tags:
         - Auth
       summary: Refresh access token
-      description: Rotate the refresh token and issue a new access token. The refresh
+      description:
+        Rotate the refresh token and issue a new access token. The refresh
         token (opaque random string) is read automatically from the HttpOnly
         cookie.
       parameters:
@@ -617,11 +624,13 @@ paths:
           description: Token refreshed successfully
           headers:
             Set-Cookie:
-              description: HttpOnly cookie containing the new refresh token. Secure and
+              description:
+                HttpOnly cookie containing the new refresh token. Secure and
                 SameSite values depend on environment configuration.
               schema:
                 type: string
-                example: refresh_token=xyz789...; HttpOnly; Secure; SameSite=Lax;
+                example:
+                  refresh_token=xyz789...; HttpOnly; Secure; SameSite=Lax;
                   Path=/api/v1/auth; Max-Age=86400
           content:
             application/json:
@@ -663,7 +672,8 @@ paths:
       tags:
         - Auth
       summary: Logout
-      description: Invalidate the current refresh token and clear the HttpOnly cookie.
+      description:
+        Invalidate the current refresh token and clear the HttpOnly cookie.
         Requires a valid access token.
       security:
         - BearerAuth: []
@@ -679,11 +689,13 @@ paths:
           description: Logout successful
           headers:
             Set-Cookie:
-              description: Clears the refresh token cookie. Secure and SameSite values depend
+              description:
+                Clears the refresh token cookie. Secure and SameSite values depend
                 on environment configuration.
               schema:
                 type: string
-                example: refresh_token=; HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth;
+                example:
+                  refresh_token=; HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth;
                   Max-Age=0
           content:
             application/json:
@@ -714,7 +726,8 @@ paths:
       tags:
         - Users
       summary: Get authenticated user profile
-      description: Returns the profile of the currently authenticated user, including
+      description:
+        Returns the profile of the currently authenticated user, including
         their user_profiles data.
       security:
         - BearerAuth: []
@@ -821,7 +834,8 @@ paths:
       tags:
         - Users
       summary: Update authenticated user profile
-      description: Update profile of the currently authenticated user. All fields are
+      description:
+        Update profile of the currently authenticated user. All fields are
         optional. Phone field is only applicable for clients.
       security:
         - BearerAuth: []
@@ -843,7 +857,7 @@ paths:
                   example: Lowokwaru
                 location_city:
                   type: string
-                  enum: [ Kota Malang, Kota Batu, Kabupaten Malang ]
+                  enum: [Kota Malang, Kota Batu, Kabupaten Malang]
                   example: Kota Malang
                 avatar_url:
                   type: string
@@ -928,7 +942,7 @@ paths:
           name: status
           schema:
             type: string
-            enum: [ open, in_progress, completed ]
+            enum: [open, in_progress, completed]
           description: Filter by job status.
           example: open
       responses:
@@ -1001,7 +1015,7 @@ paths:
           name: status
           schema:
             type: string
-            enum: [ pending, accepted, rejected, withdrawn ]
+            enum: [pending, accepted, rejected, withdrawn]
           description: Filter by bid status.
           example: pending
       responses:
@@ -1055,7 +1069,8 @@ paths:
       tags:
         - Users
       summary: Get authenticated worker's assignments
-      description: Returns a paginated list of jobs that the currently authenticated
+      description:
+        Returns a paginated list of jobs that the currently authenticated
         worker has been assigned to. Supports filtering by category and status.
         Accessible by workers only.
       security:
@@ -1085,7 +1100,7 @@ paths:
           name: status
           schema:
             type: string
-            enum: [ in_progress, completed ]
+            enum: [in_progress, completed]
           description: Filter by job status.
           example: completed
       responses:
@@ -1190,7 +1205,8 @@ paths:
       tags:
         - Users
       summary: Get user profile by ID
-      description: Returns the public profile of a user by their ID. Phone number is
+      description:
+        Returns the public profile of a user by their ID. Phone number is
         only visible if the requester has an accepted bid with this worker.
       security:
         - BearerAuth: []
@@ -1310,7 +1326,8 @@ paths:
       tags:
         - Users
       summary: List public jobs posted by a user
-      description: Returns a paginated list of jobs posted by a specific user. Only
+      description:
+        Returns a paginated list of jobs posted by a specific user. Only
         accessible for client users. Can be filtered by status and category.
       security:
         - BearerAuth: []
@@ -1347,7 +1364,7 @@ paths:
           name: status
           schema:
             type: string
-            enum: [ open, in_progress, completed ]
+            enum: [open, in_progress, completed]
           description: Filter by job status.
           example: open
       responses:
@@ -1405,7 +1422,8 @@ paths:
       tags:
         - Users
       summary: List public assignments of a worker
-      description: Returns a paginated list of jobs that a specific worker has been
+      description:
+        Returns a paginated list of jobs that a specific worker has been
         assigned to. Only accessible for worker users. Supports filtering by
         category and status.
       security:
@@ -1443,7 +1461,7 @@ paths:
           name: status
           schema:
             type: string
-            enum: [ in_progress, completed ]
+            enum: [in_progress, completed]
           description: Filter by job status.
           example: completed
       responses:
@@ -1602,7 +1620,8 @@ paths:
       tags:
         - Jobs
       summary: List jobs feed
-      description: Returns a paginated list of open jobs using cursor-based
+      description:
+        Returns a paginated list of open jobs ordered by newest with id as a tie-breaker. Uses cursor-based
         pagination. Only jobs with status open are returned. Supports filtering
         by category, city, date posted range, and budget range.
       security:
@@ -1612,8 +1631,9 @@ paths:
           name: cursor
           schema:
             type: string
-          description: Cursor for pagination. Leave empty for the first page.
-          example: eyJpZCI6IjAxOTMyYjJhIn0=
+          description: Cursor token from meta.next_cursor. Encodes created_at
+            and id for the current ordering. Leave empty for the first page.
+          example: eyJjcmVhdGVkX2F0IjoiMjAyNi0wNS0wOVQwODowMDowMFoiLCJpZCI6IjAxOTMyYjJhLTdjM2QtN2U0Zi04YTViLTZjN2Q4ZTlmMGExYiIsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0
         - in: query
           name: limit
           schema:
@@ -1631,7 +1651,7 @@ paths:
           name: city
           schema:
             type: string
-            enum: [ Kota Malang, Kota Batu, Kabupaten Malang ]
+            enum: [Kota Malang, Kota Batu, Kabupaten Malang]
           description: Filter by city.
           example: Kota Malang
         - in: query
@@ -1748,7 +1768,7 @@ paths:
                   example: Lowokwaru
                 location_city:
                   type: string
-                  enum: [ Kota Malang, Kota Batu, Kabupaten Malang ]
+                  enum: [Kota Malang, Kota Batu, Kabupaten Malang]
                   example: Kota Malang
                 start_at:
                   type: string
@@ -1861,7 +1881,8 @@ paths:
       tags:
         - Jobs
       summary: Update a job
-      description: Update a job. Only accessible by the client who posted the job,
+      description:
+        Update a job. Only accessible by the client who posted the job,
         only when the job status is still open, and only when any bids have not
         been accepted yet.
       security:
@@ -1907,7 +1928,7 @@ paths:
                   example: Lowokwaru
                 location_city:
                   type: string
-                  enum: [ Kota Malang, Kota Batu, Kabupaten Malang ]
+                  enum: [Kota Malang, Kota Batu, Kabupaten Malang]
                   example: Kota Malang
                 start_at:
                   type: string
@@ -1975,7 +1996,8 @@ paths:
       tags:
         - Jobs
       summary: Delete a job
-      description: Delete a job. Only accessible by the client who posted the job, and
+      description:
+        Delete a job. Only accessible by the client who posted the job, and
         only when the job status is still open.
       security:
         - BearerAuth: []
@@ -2037,7 +2059,8 @@ paths:
       tags:
         - Jobs
       summary: Get assigned workers for a job
-      description: Returns all workers assigned to a job. Accessible by the client who
+      description:
+        Returns all workers assigned to a job. Accessible by the client who
         posted the job or workers assigned to the job.
       security:
         - BearerAuth: []
@@ -2110,7 +2133,8 @@ paths:
       tags:
         - Jobs
       summary: Update job status
-      description: Update job status to completed or cancelled. Only accessible by the
+      description:
+        Update job status to completed or cancelled. Only accessible by the
         client who posted the job, and only when the job status is in_progress.
       security:
         - BearerAuth: []
@@ -2134,7 +2158,7 @@ paths:
               properties:
                 status:
                   type: string
-                  enum: [ completed, cancelled ]
+                  enum: [completed, cancelled]
                   example: completed
       responses:
         "200":
@@ -2196,7 +2220,8 @@ paths:
       tags:
         - Bids
       summary: List bids for a job
-      description: Returns all bids for a specific job. Accessible by the client who
+      description:
+        Returns all bids for a specific job. Accessible by the client who
         posted the job only. Workers can check their own bid status via GET
         /users/me/bids.
       security:
@@ -2214,7 +2239,7 @@ paths:
           name: status
           schema:
             type: string
-            enum: [ pending, accepted, rejected, withdrawn ]
+            enum: [pending, accepted, rejected, withdrawn]
           description: Filter bids by status.
           example: pending
       responses:
@@ -2269,7 +2294,8 @@ paths:
       tags:
         - Bids
       summary: Place a bid on a job
-      description: Place a bid on a job. Accessible by workers only. A worker can only
+      description:
+        Place a bid on a job. Accessible by workers only. A worker can only
         bid once per job, and only when the job status is still open.
       security:
         - BearerAuth: []
@@ -2363,7 +2389,8 @@ paths:
       tags:
         - Bids
       summary: Accept a bid
-      description: Accept a bid on a job. Accessible by the client who posted the job
+      description:
+        Accept a bid on a job. Accessible by the client who posted the job
         only. When the number of accepted bids reaches workers_needed, all
         remaining pending bids are automatically rejected.
       security:
@@ -2445,7 +2472,8 @@ paths:
       tags:
         - Bids
       summary: Withdraw a bid
-      description: Withdraw a bid. Accessible by the worker who placed the bid only.
+      description:
+        Withdraw a bid. Accessible by the worker who placed the bid only.
         Only possible when the bid status is still pending.
       security:
         - BearerAuth: []
@@ -2527,7 +2555,8 @@ paths:
       tags:
         - Reviews
       summary: Submit a review
-      description: Submit a review after a job is completed. Both client and worker
+      description:
+        Submit a review after a job is completed. Both client and worker
         can submit a review, but only once per assignment. Only possible when
         the job status is completed.
       security:
@@ -2554,7 +2583,8 @@ paths:
                 assignment_id:
                   type: string
                   format: uuid
-                  description: The assignment ID to review. Required to identify which worker is
+                  description:
+                    The assignment ID to review. Required to identify which worker is
                     being reviewed when workers_needed > 1.
                   example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
                 rating:
@@ -2602,7 +2632,8 @@ paths:
                 status: error
                 message: Akses ditolak.
         "404":
-          description: Job or assignment not found, or assignment does not belong to this
+          description:
+            Job or assignment not found, or assignment does not belong to this
             job
           content:
             application/json:
@@ -2635,7 +2666,8 @@ paths:
       tags:
         - Uploads
       summary: Upload a file
-      description: Upload a file to storage and return the URL. Currently only used
+      description:
+        Upload a file to storage and return the URL. Currently only used
         for avatar upload. Maximum file size is 2MB. Accepted formats are jpg,
         jpeg, and png.
       security:
@@ -2652,7 +2684,8 @@ paths:
                 file:
                   type: string
                   format: binary
-                  description: Image file to upload. Accepted formats are jpg, jpeg, and png.
+                  description:
+                    Image file to upload. Accepted formats are jpg, jpeg, and png.
                     Maximum size is 2MB.
       responses:
         "201":
@@ -2764,7 +2797,8 @@ paths:
                         properties:
                           unread_count:
                             type: integer
-                            description: Total number of unread notifications. Useful for notification
+                            description:
+                              Total number of unread notifications. Useful for notification
                               badge.
                             example: 5
         "401":
@@ -2793,7 +2827,8 @@ paths:
       tags:
         - Notifications
       summary: Mark a notification as read
-      description: Mark a single notification as read. Accessible by the owner of the
+      description:
+        Mark a single notification as read. Accessible by the owner of the
         notification only.
       security:
         - BearerAuth: []

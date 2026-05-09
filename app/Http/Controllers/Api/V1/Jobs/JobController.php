@@ -27,7 +27,9 @@ class JobController extends Controller
 
         $query = Job::query()
             ->where('status', 'open')
-            ->with(['client', 'category']);
+            ->with(['client', 'category'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
         if ($request->filled('category_slug')) {
             $query->whereHas('category', fn($q) => $q->where('slug', $request->input('category_slug')));
