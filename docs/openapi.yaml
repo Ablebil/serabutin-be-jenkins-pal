@@ -2242,6 +2242,13 @@ paths:
             enum: [pending, accepted, rejected, withdrawn]
           description: Filter bids by status.
           example: pending
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of bids per page.
+          example: 10
       responses:
         "200":
           description: Bids retrieved successfully
@@ -2260,6 +2267,8 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/BidObject"
+                  meta:
+                    $ref: "#/components/schemas/PaginatedMeta"
         "401":
           description: Unauthenticated
           content:
@@ -2319,7 +2328,7 @@ paths:
               properties:
                 proposed_price:
                   type: number
-                  minimum: 1
+                  minimum: 0
                   example: 90000
       responses:
         "201":
@@ -2384,28 +2393,19 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /jobs/{id}/bids/{bid_id}/accept:
+  /bids/{id}/accept:
     patch:
       tags:
         - Bids
       summary: Accept a bid
       description:
-        Accept a bid on a job. Accessible by the client who posted the job
-        only. When the number of accepted bids reaches workers_needed, all
-        remaining pending bids are automatically rejected.
+        Accept a bid. Accessible by the client who posted the job only. Only
+        pending bids can be accepted, and only while job slots are available.
       security:
         - BearerAuth: []
       parameters:
         - in: path
           name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: Job ID
-          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
-        - in: path
-          name: bid_id
           required: true
           schema:
             type: string
@@ -2438,7 +2438,7 @@ paths:
                 status: error
                 message: Tidak terautentikasi.
         "403":
-          description: Forbidden. Not the job owner.
+          description: Forbidden. Not the job owner, job is not open, or bid is not pending.
           content:
             application/json:
               schema:
@@ -2447,34 +2447,34 @@ paths:
                 status: error
                 message: Akses ditolak.
         "404":
-          description: Job or bid not found
+          description: Bid or job not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
                 status: error
-                message: Pekerjaan atau bid tidak ditemukan.
+                message: Bid tidak ditemukan.
         "409":
-          description: Bid is no longer in pending status
+          description: Worker slots are full
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
                 status: error
-                message: Bid ini sudah tidak bisa diterima.
+                message: Kuota pekerja sudah penuh.
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /jobs/{id}/bids/{bid_id}/withdraw:
+  /bids/{id}/reject:
     patch:
       tags:
         - Bids
-      summary: Withdraw a bid
+      summary: Reject a bid
       description:
-        Withdraw a bid. Accessible by the worker who placed the bid only.
-        Only possible when the bid status is still pending.
+        Reject a bid. Accessible by the client who posted the job only. Only
+        pending bids can be rejected.
       security:
         - BearerAuth: []
       parameters:
@@ -2484,19 +2484,11 @@ paths:
           schema:
             type: string
             format: uuid
-          description: Job ID
-          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
-        - in: path
-          name: bid_id
-          required: true
-          schema:
-            type: string
-            format: uuid
           description: Bid ID
           example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
       responses:
         "200":
-          description: Bid withdrawn successfully
+          description: Bid rejected successfully
           content:
             application/json:
               schema:
@@ -2507,7 +2499,7 @@ paths:
                     example: success
                   message:
                     type: string
-                    example: Bid berhasil ditarik.
+                    example: Bid berhasil ditolak.
                   data:
                     $ref: "#/components/schemas/BidObject"
         "401":
@@ -2520,7 +2512,7 @@ paths:
                 status: error
                 message: Tidak terautentikasi.
         "403":
-          description: Forbidden. Not the bid owner.
+          description: Forbidden. Not the job owner or bid is not pending.
           content:
             application/json:
               schema:
@@ -2529,23 +2521,79 @@ paths:
                 status: error
                 message: Akses ditolak.
         "404":
-          description: Job or bid not found
+          description: Bid or job not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
                 status: error
-                message: Pekerjaan atau bid tidak ditemukan.
-        "409":
-          description: Bid is no longer in pending status
+                message: Bid tidak ditemukan.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /bids/{id}:
+    delete:
+      tags:
+        - Bids
+      summary: Cancel a bid
+      description:
+        Cancel a bid. Accessible by the worker who placed the bid only. Only
+        possible when the bid status is still pending.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Bid ID
+          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+      responses:
+        "200":
+          description: Bid cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Bid berhasil dibatalkan.
+                  data:
+                    $ref: "#/components/schemas/BidObject"
+        "401":
+          description: Unauthenticated
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
                 status: error
-                message: Bid ini sudah tidak bisa ditarik.
+                message: Tidak terautentikasi.
+        "403":
+          description: Forbidden. Not the bid owner or bid is not pending.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Akses ditolak.
+        "404":
+          description: Bid not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Bid tidak ditemukan.
         "500":
           $ref: "#/components/responses/InternalServerError"
 
