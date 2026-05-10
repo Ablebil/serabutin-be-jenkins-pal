@@ -12,7 +12,7 @@ class BidFactory extends Factory
     public function definition(): array
     {
         return [
-            'proposed_price' => fake()->numberBetween(1000, 10000),
+            'proposed_price' => $this->faker->numberBetween(1000, 10000),
             'status' => 'pending',
         ];
     }

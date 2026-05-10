@@ -14,10 +14,10 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'email' => fake()->unique()->safeEmail(),
+            'email' => $this->faker->unique()->safeEmail(),
             'password_hash' => 'secret12345',
-            'full_name' => fake()->name(),
-            'role' => fake()->randomElement(['client', 'worker']),
+            'full_name' => $this->faker->name(),
+            'role' => $this->faker->randomElement(['client', 'worker']),
             'is_verified' => true,
             'is_active' => true,
         ];

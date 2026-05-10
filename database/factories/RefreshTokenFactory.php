@@ -12,7 +12,7 @@ class RefreshTokenFactory extends Factory
     public function definition(): array
     {
         return [
-            'token_hash' => fake()->unique()->sha256(),
+            'token_hash' => $this->faker->unique()->sha256(),
             'expires_at' => now()->addDay(),
             'created_at' => now(),
         ];

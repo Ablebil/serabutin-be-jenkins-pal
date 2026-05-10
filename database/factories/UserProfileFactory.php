@@ -12,11 +12,11 @@ class UserProfileFactory extends Factory
     public function definition(): array
     {
         return [
-            'bio' => fake()->optional()->paragraph(),
-            'location_district' => fake()->optional()->city(),
-            'location_city' => fake()->optional()->city(),
-            'avatar_url' => fake()->optional()->imageUrl(),
-            'phone' => fake()->optional()->phoneNumber(),
+            'bio' => $this->faker->optional()->paragraph(),
+            'location_district' => $this->faker->optional()->city(),
+            'location_city' => $this->faker->optional()->city(),
+            'avatar_url' => $this->faker->optional()->imageUrl(),
+            'phone' => $this->faker->optional()->phoneNumber(),
             'avg_rating' => 0,
             'total_jobs_posted' => 0,
             'total_jobs_completed' => 0,
