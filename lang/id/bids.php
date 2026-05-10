@@ -17,4 +17,10 @@ return [
         'not_found' => 'Bid tidak ditemukan.',
         'not_pending' => 'Bid tidak bisa dibatalkan karena statusnya bukan pending.',
     ],
+    'reject' => [
+        'success' => 'Bid berhasil ditolak.',
+        'not_found' => 'Bid tidak ditemukan.',
+        'job_not_found' => 'Pekerjaan tidak ditemukan.',
+        'not_pending' => 'Bid tidak bisa ditolak karena statusnya bukan pending.',
+    ],
 ];
