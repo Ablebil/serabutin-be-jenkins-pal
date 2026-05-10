@@ -121,4 +121,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(RefreshToken::class);
     }
+
+    /**
+     * Get all notifications sent by this user.
+     */
+    public function sentNotifications(): HasMany
+    {
+        return $this->hasMany(Notification::class, 'actor_id');
+    }
 }
