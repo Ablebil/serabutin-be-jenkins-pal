@@ -2606,7 +2606,7 @@ paths:
       description:
         Submit a review after a job is completed. Both client and worker
         can submit a review, but only once per assignment. Only possible when
-        the job status is completed.
+        the job status is completed. Worker must use their own assignment_id.
       security:
         - BearerAuth: []
       parameters:
@@ -2642,6 +2642,7 @@ paths:
                   example: 4
                 comment:
                   type: string
+                  maxLength: 1000
                   example: Pekerja ramah dan hasil kerjanya memuaskan.
       responses:
         "201":
@@ -2678,7 +2679,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
                 status: error
-                message: Akses ditolak.
+                message: Pekerjaan belum selesai.
         "404":
           description:
             Job or assignment not found, or assignment does not belong to this
@@ -2689,7 +2690,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
                 status: error
-                message: Pekerjaan atau assignment tidak ditemukan.
+                message: Assignment tidak ditemukan.
         "409":
           description: Review already submitted
           content:

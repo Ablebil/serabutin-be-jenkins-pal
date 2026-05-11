@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Bids\BidActionController;
 use App\Http\Controllers\Api\V1\Bids\BidController;
 use App\Http\Controllers\Api\V1\Categories\CategoryController;
 use App\Http\Controllers\Api\V1\Jobs\JobController;
+use App\Http\Controllers\Api\V1\Reviews\ReviewController;
 use App\Http\Controllers\Api\V1\Uploads\UploadController;
 use App\Http\Controllers\Api\V1\Users\UserController;
 use Illuminate\Support\Facades\Route;
@@ -51,6 +52,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/workers', [JobController::class, 'getWorkers']);
             Route::get('/bids', [BidController::class, 'index'])->middleware('role:client');
             Route::post('/bids', [BidController::class, 'store'])->middleware('role:worker');
+            Route::post('/reviews', [ReviewController::class, 'store']);
         });
     });
 
