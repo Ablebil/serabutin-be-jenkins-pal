@@ -127,17 +127,21 @@ class BidsFlowTest extends TestCase
         $response = $this->withToken($this->getToken($this->worker))
             ->postJson('/api/v1/jobs/' . $job->id . '/bids', [
                 'proposed_price' => 5000,
+                'message' => 'Mohon dikerjakan sore hari jika memungkinkan.',
             ]);
 
         $response->assertStatus(201)
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('data.status', 'pending')
-            ->assertJsonPath('data.proposed_price', '5000.00');
+            ->assertJsonPath('data.proposed_price', '5000.00')
+            ->assertJsonPath('data.message', 'Mohon dikerjakan sore hari jika memungkinkan.');
 
         $this->assertDatabaseHas('bids', [
             'job_id' => $job->id,
             'worker_id' => $this->worker->id,
             'status' => 'pending',
+            'proposed_price' => 5000.00,
+            'message' => 'Mohon dikerjakan sore hari jika memungkinkan.',
         ]);
     }
 
