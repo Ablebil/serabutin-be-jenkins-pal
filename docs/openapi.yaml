@@ -299,6 +299,9 @@ components:
           type: number
           format: float
           example: 90000
+        message:
+          type: [string, "null"]
+          example: Mohon dikerjakan sore hari jika memungkinkan.
         status:
           type: string
           enum: [pending, accepted, rejected, withdrawn]
@@ -2331,6 +2334,10 @@ paths:
                   minimum: 0
                   description: Must be between the job's budget_min and budget_max.
                   example: 90000
+                message:
+                  type: [string, "null"]
+                  description: Optional note from the worker for the client.
+                  example: Mohon dikerjakan sore hari jika memungkinkan.
       responses:
         "201":
           description: Bid placed successfully
