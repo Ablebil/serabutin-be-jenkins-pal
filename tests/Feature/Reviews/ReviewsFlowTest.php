@@ -1,20 +1,24 @@
 <?php
 
-namespace Tests\Feature\Bids;
+namespace Tests\Feature\Reviews;
 
+use App\Models\Job;
 use App\Models\JobAssignment;
 use App\Models\User;
 use App\Services\Auth\JwtService;
 use Database\Factories\BidFactory;
 use Database\Factories\CategoryFactory;
+use Database\Factories\JobAssignmentFactory;
 use Database\Factories\JobFactory;
+use Database\Factories\ReviewFactory;
 use Database\Factories\UserFactory;
+use Database\Factories\UserProfileFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;
 use Tests\TestCase;
 
-class BidsFlowTest extends TestCase
+class ReviewsFlowTest extends TestCase
 {
     private string $testSchema;
     private JwtService $jwt;
@@ -37,7 +41,7 @@ class BidsFlowTest extends TestCase
             $this->markTestSkipped('PostgreSQL test connection is not available. Configure TEST_DB_* env vars.');
         }
 
-        $this->testSchema = 'test_bids_' . str_replace('-', '', (string) Str::uuid());
+        $this->testSchema = 'test_reviews_' . str_replace('-', '', (string) Str::uuid());
         $this->createIsolatedTestSchema();
 
         config([
@@ -54,6 +58,10 @@ class BidsFlowTest extends TestCase
         $this->client = UserFactory::new()->create(['role' => 'client']);
         $this->worker = UserFactory::new()->create(['role' => 'worker']);
         $this->otherWorker = UserFactory::new()->create(['role' => 'worker']);
+
+        UserProfileFactory::new()->create(['user_id' => $this->client->id, 'avg_rating' => 0]);
+        UserProfileFactory::new()->create(['user_id' => $this->worker->id, 'avg_rating' => 0]);
+        UserProfileFactory::new()->create(['user_id' => $this->otherWorker->id, 'avg_rating' => 0]);
 
         $category = CategoryFactory::new()->create();
         $this->categoryId = $category->id;
@@ -116,89 +124,92 @@ class BidsFlowTest extends TestCase
         return $this->jwt->issueAccessToken($user)['access_token'];
     }
 
-    public function test_worker_can_create_bid(): void
+    private function createAssignment(Job $job, User $worker): JobAssignment
+    {
+        $bid = BidFactory::new()->create([
+            'job_id' => $job->id,
+            'worker_id' => $worker->id,
+            'status' => 'accepted',
+        ]);
+
+        return JobAssignmentFactory::new()->create([
+            'job_id' => $job->id,
+            'bid_id' => $bid->id,
+            'worker_id' => $worker->id,
+            'client_id' => $job->client_id,
+        ]);
+    }
+
+    public function test_client_can_submit_review_for_worker(): void
     {
         $job = JobFactory::new()->create([
             'client_id' => $this->client->id,
             'category_id' => $this->categoryId,
-            'status' => 'open',
+            'status' => 'completed',
         ]);
 
-        $response = $this->withToken($this->getToken($this->worker))
-            ->postJson('/api/v1/jobs/' . $job->id . '/bids', [
-                'proposed_price' => 5000,
-                'message' => 'Mohon dikerjakan sore hari jika memungkinkan.',
+        $assignment = $this->createAssignment($job, $this->worker);
+
+        $response = $this->withToken($this->getToken($this->client))
+            ->postJson('/api/v1/jobs/' . $job->id . '/reviews', [
+                'assignment_id' => $assignment->id,
+                'rating' => 4,
+                'comment' => 'Mantap',
             ]);
 
         $response->assertStatus(201)
             ->assertJsonPath('status', 'success')
-            ->assertJsonPath('data.status', 'pending')
-            ->assertJsonPath('data.proposed_price', '5000.00')
-            ->assertJsonPath('data.message', 'Mohon dikerjakan sore hari jika memungkinkan.');
+            ->assertJsonPath('data.rating', 4);
 
-        $this->assertDatabaseHas('bids', [
-            'job_id' => $job->id,
-            'worker_id' => $this->worker->id,
-            'status' => 'pending',
-            'proposed_price' => 5000.00,
-            'message' => 'Mohon dikerjakan sore hari jika memungkinkan.',
+        $this->assertDatabaseHas('reviews', [
+            'assignment_id' => $assignment->id,
+            'reviewer_id' => $this->client->id,
+            'reviewee_id' => $this->worker->id,
+            'rating' => 4,
         ]);
+
+        $avgRating = (float) DB::table('user_profiles')
+            ->where('user_id', $this->worker->id)
+            ->value('avg_rating');
+
+        $this->assertEquals(4.0, $avgRating);
     }
 
-    public function test_client_can_list_bids_for_own_job(): void
+    public function test_worker_can_submit_review_for_client(): void
     {
         $job = JobFactory::new()->create([
             'client_id' => $this->client->id,
             'category_id' => $this->categoryId,
-            'status' => 'open',
+            'status' => 'completed',
         ]);
 
-        BidFactory::new()->create([
-            'job_id' => $job->id,
-            'worker_id' => $this->worker->id,
-        ]);
-
-        BidFactory::new()->create([
-            'job_id' => $job->id,
-            'worker_id' => $this->otherWorker->id,
-        ]);
-
-        $response = $this->withToken($this->getToken($this->client))
-            ->getJson('/api/v1/jobs/' . $job->id . '/bids');
-
-        $response->assertStatus(200)
-            ->assertJsonPath('status', 'success')
-            ->assertJsonCount(2, 'data');
-    }
-
-    public function test_worker_can_cancel_bid(): void
-    {
-        $job = JobFactory::new()->create([
-            'client_id' => $this->client->id,
-            'category_id' => $this->categoryId,
-            'status' => 'open',
-        ]);
-
-        $bid = BidFactory::new()->create([
-            'job_id' => $job->id,
-            'worker_id' => $this->worker->id,
-            'status' => 'pending',
-        ]);
+        $assignment = $this->createAssignment($job, $this->worker);
 
         $response = $this->withToken($this->getToken($this->worker))
-            ->deleteJson('/api/v1/bids/' . $bid->id);
+            ->postJson('/api/v1/jobs/' . $job->id . '/reviews', [
+                'assignment_id' => $assignment->id,
+                'rating' => 5,
+            ]);
 
-        $response->assertStatus(200)
+        $response->assertStatus(201)
             ->assertJsonPath('status', 'success')
-            ->assertJsonPath('data.status', 'withdrawn');
+            ->assertJsonPath('data.rating', 5);
 
-        $this->assertDatabaseHas('bids', [
-            'id' => $bid->id,
-            'status' => 'withdrawn',
+        $this->assertDatabaseHas('reviews', [
+            'assignment_id' => $assignment->id,
+            'reviewer_id' => $this->worker->id,
+            'reviewee_id' => $this->client->id,
+            'rating' => 5,
         ]);
+
+        $avgRating = (float) DB::table('user_profiles')
+            ->where('user_id', $this->client->id)
+            ->value('avg_rating');
+
+        $this->assertEquals(5.0, $avgRating);
     }
 
-    public function test_client_can_reject_bid(): void
+    public function test_review_requires_completed_job(): void
     {
         $job = JobFactory::new()->create([
             'client_id' => $this->client->id,
@@ -206,57 +217,59 @@ class BidsFlowTest extends TestCase
             'status' => 'open',
         ]);
 
-        $bid = BidFactory::new()->create([
-            'job_id' => $job->id,
-            'worker_id' => $this->worker->id,
-            'status' => 'pending',
-        ]);
+        $assignment = $this->createAssignment($job, $this->worker);
 
         $response = $this->withToken($this->getToken($this->client))
-            ->patchJson('/api/v1/bids/' . $bid->id . '/reject');
+            ->postJson('/api/v1/jobs/' . $job->id . '/reviews', [
+                'assignment_id' => $assignment->id,
+                'rating' => 3,
+            ]);
 
-        $response->assertStatus(200)
-            ->assertJsonPath('status', 'success')
-            ->assertJsonPath('data.status', 'rejected');
-
-        $this->assertDatabaseHas('bids', [
-            'id' => $bid->id,
-            'status' => 'rejected',
-        ]);
+        $response->assertStatus(403);
     }
 
-    public function test_client_can_accept_bid_creates_assignment(): void
+    public function test_worker_cannot_review_with_other_assignment(): void
     {
         $job = JobFactory::new()->create([
             'client_id' => $this->client->id,
             'category_id' => $this->categoryId,
-            'status' => 'open',
-            'workers_needed' => 1,
+            'status' => 'completed',
         ]);
 
-        $bid = BidFactory::new()->create([
-            'job_id' => $job->id,
-            'worker_id' => $this->worker->id,
-            'status' => 'pending',
+        $assignment = $this->createAssignment($job, $this->worker);
+
+        $response = $this->withToken($this->getToken($this->otherWorker))
+            ->postJson('/api/v1/jobs/' . $job->id . '/reviews', [
+                'assignment_id' => $assignment->id,
+                'rating' => 4,
+            ]);
+
+        $response->assertStatus(404);
+    }
+
+    public function test_review_rejects_duplicates(): void
+    {
+        $job = JobFactory::new()->create([
+            'client_id' => $this->client->id,
+            'category_id' => $this->categoryId,
+            'status' => 'completed',
+        ]);
+
+        $assignment = $this->createAssignment($job, $this->worker);
+
+        ReviewFactory::new()->create([
+            'assignment_id' => $assignment->id,
+            'reviewer_id' => $this->client->id,
+            'reviewee_id' => $this->worker->id,
+            'rating' => 4,
         ]);
 
         $response = $this->withToken($this->getToken($this->client))
-            ->patchJson('/api/v1/bids/' . $bid->id . '/accept');
+            ->postJson('/api/v1/jobs/' . $job->id . '/reviews', [
+                'assignment_id' => $assignment->id,
+                'rating' => 4,
+            ]);
 
-        $response->assertStatus(200)
-            ->assertJsonPath('status', 'success')
-            ->assertJsonPath('data.status', 'accepted');
-
-        $this->assertDatabaseHas('job_assignments', [
-            'job_id' => $job->id,
-            'bid_id' => $bid->id,
-            'worker_id' => $this->worker->id,
-            'client_id' => $this->client->id,
-        ]);
-
-        $this->assertDatabaseHas('jobs', [
-            'id' => $job->id,
-            'status' => 'in_progress',
-        ]);
+        $response->assertStatus(409);
     }
 }

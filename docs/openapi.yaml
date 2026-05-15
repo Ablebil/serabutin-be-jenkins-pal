@@ -299,6 +299,9 @@ components:
           type: number
           format: float
           example: 90000
+        message:
+          type: [string, "null"]
+          example: Mohon dikerjakan sore hari jika memungkinkan.
         status:
           type: string
           enum: [pending, accepted, rejected, withdrawn]
@@ -2329,7 +2332,12 @@ paths:
                 proposed_price:
                   type: number
                   minimum: 0
+                  description: Must be between the job's budget_min and budget_max.
                   example: 90000
+                message:
+                  type: [string, "null"]
+                  description: Optional note from the worker for the client.
+                  example: Mohon dikerjakan sore hari jika memungkinkan.
       responses:
         "201":
           description: Bid placed successfully
@@ -2606,7 +2614,7 @@ paths:
       description:
         Submit a review after a job is completed. Both client and worker
         can submit a review, but only once per assignment. Only possible when
-        the job status is completed.
+        the job status is completed. Worker must use their own assignment_id.
       security:
         - BearerAuth: []
       parameters:
@@ -2642,6 +2650,7 @@ paths:
                   example: 4
                 comment:
                   type: string
+                  maxLength: 1000
                   example: Pekerja ramah dan hasil kerjanya memuaskan.
       responses:
         "201":
@@ -2678,7 +2687,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
                 status: error
-                message: Akses ditolak.
+                message: Pekerjaan belum selesai.
         "404":
           description:
             Job or assignment not found, or assignment does not belong to this
@@ -2689,7 +2698,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
                 status: error
-                message: Pekerjaan atau assignment tidak ditemukan.
+                message: Assignment tidak ditemukan.
         "409":
           description: Review already submitted
           content:

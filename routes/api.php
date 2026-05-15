@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Bids\BidActionController;
 use App\Http\Controllers\Api\V1\Bids\BidController;
 use App\Http\Controllers\Api\V1\Categories\CategoryController;
 use App\Http\Controllers\Api\V1\Jobs\JobController;
+use App\Http\Controllers\Api\V1\Reviews\ReviewController;
 use App\Http\Controllers\Api\V1\Uploads\UploadController;
 use App\Http\Controllers\Api\V1\Users\UserController;
 use Illuminate\Support\Facades\Route;
@@ -40,17 +41,21 @@ Route::prefix('v1')->group(function () {
         Route::get('/', [CategoryController::class, 'index']);
     });
 
-    Route::prefix('jobs')->middleware('auth.jwt')->group(function (): void {
+    Route::prefix('jobs')->group(function (): void {
         Route::get('/', [JobController::class, 'index']);
-        Route::post('/', [JobController::class, 'store'])->middleware('role:client');
-        Route::prefix('{id}')->group(function (): void {
-            Route::get('/', [JobController::class, 'show']);
-            Route::patch('/', [JobController::class, 'update'])->middleware('role:client');
-            Route::delete('/', [JobController::class, 'destroy'])->middleware('role:client');
-            Route::patch('/status', [JobController::class, 'updateStatus'])->middleware('role:client');
-            Route::get('/workers', [JobController::class, 'getWorkers']);
-            Route::get('/bids', [BidController::class, 'index'])->middleware('role:client');
-            Route::post('/bids', [BidController::class, 'store'])->middleware('role:worker');
+
+        Route::middleware('auth.jwt')->group(function (): void {
+            Route::post('/', [JobController::class, 'store'])->middleware('role:client');
+            Route::prefix('{id}')->group(function (): void {
+                Route::get('/', [JobController::class, 'show']);
+                Route::patch('/', [JobController::class, 'update'])->middleware('role:client');
+                Route::delete('/', [JobController::class, 'destroy'])->middleware('role:client');
+                Route::patch('/status', [JobController::class, 'updateStatus'])->middleware('role:client');
+                Route::get('/workers', [JobController::class, 'getWorkers']);
+                Route::get('/bids', [BidController::class, 'index'])->middleware('role:client');
+                Route::post('/bids', [BidController::class, 'store'])->middleware('role:worker');
+                Route::post('/reviews', [ReviewController::class, 'store']);
+            });
         });
     });
 

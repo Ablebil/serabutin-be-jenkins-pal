@@ -11,6 +11,7 @@ return [
         'job_not_open' => 'Pekerjaan tidak dalam status open.',
         'already_bid' => 'Kamu sudah mengirim bid untuk pekerjaan ini.',
         'own_job' => 'Kamu tidak bisa mengirim bid pada pekerjaanmu sendiri.',
+        'price_out_of_range' => 'Harga penawaran harus berada di antara budget minimal dan maksimal.',
     ],
     'cancel' => [
         'success' => 'Bid berhasil dibatalkan.',

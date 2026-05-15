@@ -21,6 +21,7 @@ class Bid extends Model
         'job_id',
         'worker_id',
         'proposed_price',
+        'message',
         'status',
     ];
 
