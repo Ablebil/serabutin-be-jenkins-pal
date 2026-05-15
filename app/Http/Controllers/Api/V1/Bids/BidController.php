@@ -77,6 +77,7 @@ class BidController extends Controller
             'job_id' => $job->id,
             'worker_id' => $user->id,
             'proposed_price' => $payload['proposed_price'],
+            'message' => $payload['message'] ?? null,
             'status' => 'pending',
         ]);
 

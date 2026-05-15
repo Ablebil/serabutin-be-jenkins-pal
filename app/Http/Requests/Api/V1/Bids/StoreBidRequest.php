@@ -17,6 +17,7 @@ class StoreBidRequest extends FormRequest
     {
         return [
             'proposed_price' => ['required', 'numeric', 'min:0'],
+            'message' => ['nullable', 'string'],
         ];
     }
 
@@ -26,6 +27,7 @@ class StoreBidRequest extends FormRequest
             'proposed_price.required' => 'Harga penawaran wajib diisi.',
             'proposed_price.numeric' => 'Harga penawaran harus berupa angka.',
             'proposed_price.min' => 'Harga penawaran tidak boleh negatif.',
+            'message.string' => 'Pesan harus berupa teks.',
         ];
     }
 
