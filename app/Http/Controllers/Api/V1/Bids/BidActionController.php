@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1\Bids;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Bids\AcceptBidRequest;
-use App\Http\Requests\Api\V1\Bids\RejectBidRequest;
 use App\Http\Resources\Api\V1\Bids\BidResource;
 use App\Models\Bid;
 use App\Models\Job;
@@ -65,6 +64,16 @@ class BidActionController extends Controller
                 $job->update(['status' => 'in_progress']);
             }
 
+            $acceptedCount++;
+
+            if ($acceptedCount >= $job->workers_needed) {
+                Bid::query()
+                    ->where('job_id', $job->id)
+                    ->where('status', 'pending')
+                    ->where('id', '!=', $bid->id)
+                    ->update(['status' => 'rejected']);
+            }
+
             return ['bid' => $bid->fresh()->load('worker')];
         });
 
@@ -83,36 +92,6 @@ class BidActionController extends Controller
         return $this->success(
             __('bids.accept.success'),
             new BidResource($result['bid'])
-        );
-    }
-
-    public function reject(RejectBidRequest $request, string $id): JsonResponse
-    {
-        $user = $request->attributes->get('auth_user');
-        $bid = Bid::query()->with('job')->find($id);
-
-        if (is_null($bid)) {
-            return $this->error(__('bids.reject.not_found'), 404);
-        }
-
-        if (is_null($bid->job) || !is_null($bid->job->deleted_at)) {
-            return $this->error(__('bids.reject.job_not_found'), 404);
-        }
-
-        if ($bid->job->client_id !== $user->id) {
-            return $this->error(__('auth.jwt.forbidden'), 403);
-        }
-
-        if ($bid->status !== 'pending') {
-            return $this->error(__('bids.reject.not_pending'), 403);
-        }
-
-        $bid->update(['status' => 'rejected']);
-        $bid->load('worker');
-
-        return $this->success(
-            __('bids.reject.success'),
-            new BidResource($bid)
         );
     }
 }

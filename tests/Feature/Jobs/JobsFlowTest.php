@@ -190,9 +190,11 @@ class JobsFlowTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
-    public function test_feed_requires_authentication(): void
+    public function test_feed_is_public_without_authentication(): void
     {
-        $this->getJson('/api/v1/jobs')->assertStatus(401);
+        $this->getJson('/api/v1/jobs')
+            ->assertStatus(200)
+            ->assertJsonPath('status', 'success');
     }
 
     public function test_store_creates_job_for_client(): void

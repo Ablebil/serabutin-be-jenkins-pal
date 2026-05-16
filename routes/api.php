@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Bids\BidActionController;
 use App\Http\Controllers\Api\V1\Bids\BidController;
 use App\Http\Controllers\Api\V1\Categories\CategoryController;
 use App\Http\Controllers\Api\V1\Jobs\JobController;
+use App\Http\Controllers\Api\V1\Notifications\NotificationController;
 use App\Http\Controllers\Api\V1\Reviews\ReviewController;
 use App\Http\Controllers\Api\V1\Uploads\UploadController;
 use App\Http\Controllers\Api\V1\Users\UserController;
@@ -43,11 +44,11 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('jobs')->group(function (): void {
         Route::get('/', [JobController::class, 'index']);
+        Route::get('/{id}', [JobController::class, 'show']);
 
         Route::middleware('auth.jwt')->group(function (): void {
             Route::post('/', [JobController::class, 'store'])->middleware('role:client');
             Route::prefix('{id}')->group(function (): void {
-                Route::get('/', [JobController::class, 'show']);
                 Route::patch('/', [JobController::class, 'update'])->middleware('role:client');
                 Route::delete('/', [JobController::class, 'destroy'])->middleware('role:client');
                 Route::patch('/status', [JobController::class, 'updateStatus'])->middleware('role:client');
@@ -62,7 +63,12 @@ Route::prefix('v1')->group(function () {
     Route::prefix('bids')->middleware('auth.jwt')->group(function (): void {
         Route::delete('/{id}', [BidController::class, 'cancel'])->middleware('role:worker');
         Route::patch('/{id}/accept', [BidActionController::class, 'accept'])->middleware('role:client');
-        Route::patch('/{id}/reject', [BidActionController::class, 'reject'])->middleware('role:client');
+    });
+
+    Route::prefix('notifications')->middleware(['auth.jwt', 'role:worker'])->group(function (): void {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::patch('/{id}/read', [NotificationController::class, 'read']);
+        Route::patch('/read-all', [NotificationController::class, 'readAll']);
     });
 
     Route::prefix('uploads')->middleware('auth.jwt')->group(function (): void {

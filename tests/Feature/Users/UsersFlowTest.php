@@ -244,13 +244,15 @@ class UsersFlowTest extends TestCase
         BidFactory::new()->create([
             'job_id' => $job->id,
             'worker_id' => $worker->id,
+            'status' => 'accepted',
         ]);
 
         $response = $this->getJson('/api/v1/users/me/bids', $this->getHeaders($worker));
 
         $response->assertOk()
             ->assertJsonPath('status', 'success')
-            ->assertJsonCount(1, 'data');
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.client.phone', '081234567890');
     }
 
     public function test_me_bids_forbidden_for_client()

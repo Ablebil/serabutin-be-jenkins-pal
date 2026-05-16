@@ -157,7 +157,7 @@ class UserController extends Controller
         $user = $request->attributes->get('auth_user');
 
         $query = $user->bids()
-            ->with(['worker', 'job.category', 'job.client'])
+            ->with(['worker', 'job.category', 'job.client.profile'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -171,6 +171,16 @@ class UserController extends Controller
         $items = $paginator->getCollection()->map(fn($bid) => [
             'bid' => new BidResource($bid),
             'job' => new JobResource($bid->job),
+            'client' => $bid->job?->client
+                ? array_merge(
+                    (new PublicUserResource($bid->job->client))->resolve($request),
+                    [
+                        'phone' => $bid->status === 'accepted'
+                            ? $bid->job?->client?->profile?->phone
+                            : null,
+                    ],
+                )
+                : null,
         ]);
 
         return $this->paginated(
