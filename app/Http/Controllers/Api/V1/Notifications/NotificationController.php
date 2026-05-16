@@ -57,11 +57,32 @@ class NotificationController extends Controller
 
     public function read(Request $request, string $id): JsonResponse
     {
-        return $this->success(__('notification.read.success'));
+        $user = $request->attributes->get('auth_user');
+
+        $notification = Notification::query()->where('id', $id)->first();
+
+        if (is_null($notification)) {
+            return $this->error(__('notification.read.not_found'), 404);
+        }
+
+        if ($notification->notifiable_type !== User::class || $notification->notifiable_id !== $user->id) {
+            return $this->error(__('notification.read.forbidden'), 403);
+        }
+
+        $notification->markAsRead();
+
+        return $this->success(
+            __('notification.read.success'),
+            new NotificationResource($notification)
+        );
     }
 
     public function readAll(Request $request): JsonResponse
     {
+        $user = $request->attributes->get('auth_user');
+
+        Notification::markAllAsReadFor($user);
+
         return $this->success(__('notification.read_all.success'));
     }
 }
