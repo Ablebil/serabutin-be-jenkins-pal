@@ -1240,8 +1240,6 @@ paths:
       description:
         Returns the public profile of a user by their ID. Phone number is
         only visible if the requester has an accepted bid with this worker.
-      security:
-        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -1332,15 +1330,6 @@ paths:
                             review_count: 15
                         created_at: "2025-04-25T10:00:00Z"
                         updated_at: "2025-04-25T10:00:00Z"
-        "401":
-          description: Unauthenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Tidak terautentikasi.
         "404":
           description: User not found
           content:
@@ -1361,8 +1350,6 @@ paths:
       description:
         Returns a paginated list of jobs posted by a specific user. Only
         accessible for client users. Can be filtered by status and category.
-      security:
-        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -1419,15 +1406,6 @@ paths:
                       $ref: "#/components/schemas/JobObject"
                   meta:
                     $ref: "#/components/schemas/PaginatedMeta"
-        "401":
-          description: Unauthenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Tidak terautentikasi.
         "403":
           description: Forbidden. User is not a client.
           content:
@@ -1458,8 +1436,6 @@ paths:
         Returns a paginated list of jobs that a specific worker has been
         assigned to. Only accessible for worker users. Supports filtering by
         category and status.
-      security:
-        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -1516,15 +1492,6 @@ paths:
                       $ref: "#/components/schemas/JobObject"
                   meta:
                     $ref: "#/components/schemas/PaginatedMeta"
-        "401":
-          description: Unauthenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Tidak terautentikasi.
         "403":
           description: Forbidden. User is not a worker.
           content:
@@ -1552,8 +1519,6 @@ paths:
         - Users
       summary: List public reviews of a user
       description: Returns a paginated list of reviews received by a specific user.
-      security:
-        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -1597,15 +1562,6 @@ paths:
                       $ref: "#/components/schemas/ReviewObject"
                   meta:
                     $ref: "#/components/schemas/PaginatedMeta"
-        "401":
-          description: Unauthenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Tidak terautentikasi.
         "404":
           description: User not found
           content:
@@ -1656,8 +1612,6 @@ paths:
         Returns a paginated list of open jobs ordered by newest with id as a tie-breaker. Uses cursor-based
         pagination. Only jobs with status open are returned. Supports filtering
         by category, city, date posted range, and budget range.
-      security:
-        - BearerAuth: []
       parameters:
         - in: query
           name: cursor
@@ -1738,15 +1692,6 @@ paths:
                       $ref: "#/components/schemas/JobObject"
                   meta:
                     $ref: "#/components/schemas/CursorMeta"
-        "401":
-          description: Unauthenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Tidak terautentikasi.
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -1861,8 +1806,6 @@ paths:
         - Jobs
       summary: Get job detail
       description: Returns the detail of a job by its ID.
-      security:
-        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -1888,15 +1831,6 @@ paths:
                     example: Detail pekerjaan berhasil diambil.
                   data:
                     $ref: "#/components/schemas/JobObject"
-        "401":
-          description: Unauthenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Tidak terautentikasi.
         "404":
           description: Job not found
           content:
@@ -2275,6 +2209,13 @@ paths:
           description: Filter bids by status.
           example: pending
         - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number.
+          example: 1
+        - in: query
           name: limit
           schema:
             type: integer
@@ -2438,6 +2379,8 @@ paths:
       description:
         Accept a bid. Accessible by the client who posted the job only. Only
         pending bids can be accepted, and only while job slots are available.
+        When the acceptance fills the last worker slot, all remaining pending
+        bids for that job are automatically rejected by the backend.
       security:
         - BearerAuth: []
       parameters:
@@ -2501,71 +2444,6 @@ paths:
               example:
                 status: error
                 message: Kuota pekerja sudah penuh.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /bids/{id}/reject:
-    patch:
-      tags:
-        - Bids
-      summary: Reject a bid
-      description:
-        Reject a bid. Accessible by the client who posted the job only. Only
-        pending bids can be rejected.
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: Bid ID
-          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
-      responses:
-        "200":
-          description: Bid rejected successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: success
-                  message:
-                    type: string
-                    example: Bid berhasil ditolak.
-                  data:
-                    $ref: "#/components/schemas/BidObject"
-        "401":
-          description: Unauthenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Tidak terautentikasi.
-        "403":
-          description: Forbidden. Not the job owner or bid is not pending.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Akses ditolak.
-        "404":
-          description: Bid or job not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: error
-                message: Bid tidak ditemukan.
         "500":
           $ref: "#/components/responses/InternalServerError"
 

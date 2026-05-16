@@ -63,7 +63,6 @@ Route::prefix('v1')->group(function () {
     Route::prefix('bids')->middleware('auth.jwt')->group(function (): void {
         Route::delete('/{id}', [BidController::class, 'cancel'])->middleware('role:worker');
         Route::patch('/{id}/accept', [BidActionController::class, 'accept'])->middleware('role:client');
-        Route::patch('/{id}/reject', [BidActionController::class, 'reject'])->middleware('role:client');
     });
 
     Route::prefix('notifications')->middleware(['auth.jwt', 'role:worker'])->group(function (): void {

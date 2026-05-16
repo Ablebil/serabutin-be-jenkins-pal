@@ -198,33 +198,6 @@ class BidsFlowTest extends TestCase
         ]);
     }
 
-    public function test_client_can_reject_bid(): void
-    {
-        $job = JobFactory::new()->create([
-            'client_id' => $this->client->id,
-            'category_id' => $this->categoryId,
-            'status' => 'open',
-        ]);
-
-        $bid = BidFactory::new()->create([
-            'job_id' => $job->id,
-            'worker_id' => $this->worker->id,
-            'status' => 'pending',
-        ]);
-
-        $response = $this->withToken($this->getToken($this->client))
-            ->patchJson('/api/v1/bids/' . $bid->id . '/reject');
-
-        $response->assertStatus(200)
-            ->assertJsonPath('status', 'success')
-            ->assertJsonPath('data.status', 'rejected');
-
-        $this->assertDatabaseHas('bids', [
-            'id' => $bid->id,
-            'status' => 'rejected',
-        ]);
-    }
-
     public function test_client_can_accept_bid_creates_assignment(): void
     {
         $job = JobFactory::new()->create([
@@ -252,6 +225,71 @@ class BidsFlowTest extends TestCase
             'bid_id' => $bid->id,
             'worker_id' => $this->worker->id,
             'client_id' => $this->client->id,
+        ]);
+
+        $this->assertDatabaseHas('jobs', [
+            'id' => $job->id,
+            'status' => 'in_progress',
+        ]);
+    }
+
+    public function test_client_accepting_final_slot_auto_rejects_other_pending_bids(): void
+    {
+        $job = JobFactory::new()->create([
+            'client_id' => $this->client->id,
+            'category_id' => $this->categoryId,
+            'status' => 'open',
+            'workers_needed' => 2,
+        ]);
+
+        $firstBid = BidFactory::new()->create([
+            'job_id' => $job->id,
+            'worker_id' => $this->worker->id,
+            'status' => 'pending',
+        ]);
+
+        $secondBid = BidFactory::new()->create([
+            'job_id' => $job->id,
+            'worker_id' => $this->otherWorker->id,
+            'status' => 'pending',
+        ]);
+
+        $thirdWorker = UserFactory::new()->create(['role' => 'worker']);
+        $thirdBid = BidFactory::new()->create([
+            'job_id' => $job->id,
+            'worker_id' => $thirdWorker->id,
+            'status' => 'pending',
+        ]);
+
+        $firstResponse = $this->withToken($this->getToken($this->client))
+            ->patchJson('/api/v1/bids/' . $firstBid->id . '/accept');
+
+        $firstResponse->assertStatus(200)
+            ->assertJsonPath('data.status', 'accepted');
+
+        $secondResponse = $this->withToken($this->getToken($this->client))
+            ->patchJson('/api/v1/bids/' . $secondBid->id . '/accept');
+
+        $secondResponse->assertStatus(200)
+            ->assertJsonPath('data.status', 'accepted');
+
+        $this->assertDatabaseHas('job_assignments', [
+            'job_id' => $job->id,
+            'bid_id' => $firstBid->id,
+            'worker_id' => $this->worker->id,
+            'client_id' => $this->client->id,
+        ]);
+
+        $this->assertDatabaseHas('job_assignments', [
+            'job_id' => $job->id,
+            'bid_id' => $secondBid->id,
+            'worker_id' => $this->otherWorker->id,
+            'client_id' => $this->client->id,
+        ]);
+
+        $this->assertDatabaseHas('bids', [
+            'id' => $thirdBid->id,
+            'status' => 'rejected',
         ]);
 
         $this->assertDatabaseHas('jobs', [
