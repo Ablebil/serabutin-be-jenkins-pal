@@ -360,16 +360,20 @@ components:
         job_id:
           type: string
           format: uuid
+          description: Job identifier from the notification payload.
           example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
         job_title:
           type: string
+          description: Job title from the notification payload.
           example: Butuh tukang bebersih rumah
         bid_id:
           type: string
           format: uuid
+          description: Bid identifier from the notification payload.
           example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
         is_read:
           type: boolean
+          description: True when the notification has been read.
           example: false
         created_at:
           type: string
