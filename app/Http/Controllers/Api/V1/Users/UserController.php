@@ -130,7 +130,7 @@ class UserController extends Controller
         $user = $request->attributes->get('auth_user');
 
         $query = $user->postedJobs()
-            ->with(['client', 'category'])
+            ->with(['client', 'category', 'assignments.reviews'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -195,7 +195,7 @@ class UserController extends Controller
         $user = $request->attributes->get('auth_user');
 
         $query = $user->assignments()
-            ->with(['job.category', 'job.client'])
+            ->with(['job.category', 'job.client', 'job.assignments.reviews'])
             ->latest();
 
         if ($request->filled('status')) {

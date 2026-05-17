@@ -277,6 +277,13 @@ components:
           type: string
           format: date-time
           example: 2025-05-01T17:00:00Z
+        has_reviewed:
+          type: boolean
+          description:
+            Whether the currently authenticated user has already submitted a
+            review for this job's relevant assignment(s). Returned when the
+            request is authenticated.
+          example: false
         created_at:
           type: string
           format: date-time
@@ -921,7 +928,9 @@ paths:
       summary: Get authenticated client's posted jobs
       description: Returns a paginated list of jobs posted by the currently
         authenticated client. Supports filtering by category and status.
-        Accessible by clients only.
+        Accessible by clients only. Each job item includes has_reviewed to
+        indicate whether the authenticated client has already reviewed the
+        related assignment(s).
       security:
         - BearerAuth: []
       parameters:
@@ -1104,7 +1113,9 @@ paths:
       description:
         Returns a paginated list of jobs that the currently authenticated
         worker has been assigned to. Supports filtering by category and status.
-        Accessible by workers only.
+        Accessible by workers only. Each job item includes has_reviewed to
+        indicate whether the authenticated worker has already reviewed the
+        assignment.
       security:
         - BearerAuth: []
       parameters:
