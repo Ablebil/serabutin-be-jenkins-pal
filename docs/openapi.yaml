@@ -242,6 +242,13 @@ components:
           $ref: "#/components/schemas/PublicUserObject"
         category:
           $ref: "#/components/schemas/CategoryObject"
+        assignments:
+          type: array
+          description:
+            Nested assignment summary objects. Present only when the relation
+            is eager-loaded in the response.
+          items:
+            $ref: "#/components/schemas/AssignmentSummaryObject"
         title:
           type: string
           example: Butuh tukang bebersih rumah
@@ -277,12 +284,110 @@ components:
           type: string
           format: date-time
           example: 2025-05-01T17:00:00Z
+        created_at:
+          type: string
+          format: date-time
+          example: 2025-04-25T10:00:00Z
+        updated_at:
+          type: string
+          format: date-time
+          example: 2025-04-25T10:00:00Z
+
+    JobWithoutAssignmentsObject:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+        client:
+          $ref: "#/components/schemas/PublicUserObject"
+        category:
+          $ref: "#/components/schemas/CategoryObject"
+        title:
+          type: string
+          example: Butuh tukang bebersih rumah
+        description:
+          type: string
+          example: Rumah 2 lantai, perlu dibersihkan bagian dalam dan luar.
+        budget_min:
+          type: number
+          format: float
+          example: 80000
+        budget_max:
+          type: number
+          format: float
+          example: 150000
+        workers_needed:
+          type: integer
+          example: 2
+        location_district:
+          type: string
+          example: Lowokwaru
+        location_city:
+          type: string
+          example: Kota Malang
+        status:
+          type: string
+          enum: [open, in_progress, completed, cancelled]
+          example: open
+        start_at:
+          type: string
+          format: date-time
+          example: 2025-05-01T08:00:00Z
+        deadline_at:
+          type: string
+          format: date-time
+          example: 2025-05-01T17:00:00Z
+        created_at:
+          type: string
+          format: date-time
+          example: 2025-04-25T10:00:00Z
+        updated_at:
+          type: string
+          format: date-time
+          example: 2025-04-25T10:00:00Z
+
+    AssignmentSummaryObject:
+      type: object
+      properties:
+        assignment_id:
+          type: string
+          format: uuid
+          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+        worker:
+          $ref: "#/components/schemas/PublicUserObject"
         has_reviewed:
           type: boolean
           description:
             Whether the currently authenticated user has already submitted a
-            review for this job's relevant assignment(s). Returned when the
-            request is authenticated.
+            review for this assignment.
+          example: false
+        created_at:
+          type: string
+          format: date-time
+          example: 2025-04-25T10:00:00Z
+        updated_at:
+          type: string
+          format: date-time
+          example: 2025-04-25T10:00:00Z
+
+    AssignmentObject:
+      type: object
+      properties:
+        assignment_id:
+          type: string
+          format: uuid
+          example: 01932b2a-7c3d-7e4f-8a5b-6c7d8e9f0a1b
+        job:
+          $ref: "#/components/schemas/JobWithoutAssignmentsObject"
+        worker:
+          $ref: "#/components/schemas/PublicUserObject"
+        has_reviewed:
+          type: boolean
+          description:
+            Whether the currently authenticated user has already submitted a
+            review for this assignment.
           example: false
         created_at:
           type: string
@@ -928,9 +1033,9 @@ paths:
       summary: Get authenticated client's posted jobs
       description: Returns a paginated list of jobs posted by the currently
         authenticated client. Supports filtering by category and status.
-        Accessible by clients only. Each job item includes has_reviewed to
-        indicate whether the authenticated client has already reviewed the
-        related assignment(s).
+        Accessible by clients only. Each job item includes nested assignments;
+        each assignment contains assignment_id, worker, and has_reviewed so
+        the frontend can route review actions correctly.
       security:
         - BearerAuth: []
       parameters:
@@ -1111,11 +1216,11 @@ paths:
         - Users
       summary: Get authenticated worker's assignments
       description:
-        Returns a paginated list of jobs that the currently authenticated
-        worker has been assigned to. Supports filtering by category and status.
-        Accessible by workers only. Each job item includes has_reviewed to
-        indicate whether the authenticated worker has already reviewed the
-        assignment.
+        Returns a paginated list of assignments for the currently authenticated
+        worker. Supports filtering by category and status. Accessible by workers
+        only. Each item includes assignment_id, job, worker, and has_reviewed.
+        The nested job payload does not include assignments because that
+        relation is not eager-loaded here.
       security:
         - BearerAuth: []
       parameters:
@@ -1163,7 +1268,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: "#/components/schemas/JobObject"
+                      $ref: "#/components/schemas/AssignmentObject"
                   meta:
                     $ref: "#/components/schemas/PaginatedMeta"
         "401":

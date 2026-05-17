@@ -225,7 +225,7 @@ class UsersFlowTest extends TestCase
             'worker_id' => UserFactory::new()->create(['role' => 'worker'])->id,
         ]);
 
-        JobAssignmentFactory::new()->create([
+        $pendingAssignment = JobAssignmentFactory::new()->create([
             'client_id' => $client->id,
             'job_id' => $pendingJob->id,
             'worker_id' => $pendingBid->worker_id,
@@ -240,8 +240,14 @@ class UsersFlowTest extends TestCase
 
         $jobs = collect($response->json('data'))->keyBy('id');
 
-        expect($jobs->get($reviewedJob->id)['has_reviewed'])->toBeTrue();
-        expect($jobs->get($pendingJob->id)['has_reviewed'])->toBeFalse();
+        expect(array_key_exists('has_reviewed', $jobs->get($reviewedJob->id)))->toBeFalse();
+        expect(array_key_exists('has_reviewed', $jobs->get($pendingJob->id)))->toBeFalse();
+        expect($jobs->get($reviewedJob->id)['assignments'][0]['assignment_id'])->toBe($reviewedAssignment->id);
+        expect(array_key_exists('job', $jobs->get($reviewedJob->id)['assignments'][0]))->toBeFalse();
+        expect($jobs->get($reviewedJob->id)['assignments'][0]['has_reviewed'])->toBeTrue();
+        expect($jobs->get($pendingJob->id)['assignments'][0]['assignment_id'])->toBe($pendingAssignment->id);
+        expect(array_key_exists('job', $jobs->get($pendingJob->id)['assignments'][0]))->toBeFalse();
+        expect($jobs->get($pendingJob->id)['assignments'][0]['has_reviewed'])->toBeFalse();
     }
 
     public function test_me_jobs_forbidden_for_worker()
@@ -354,7 +360,7 @@ class UsersFlowTest extends TestCase
             'worker_id' => $worker->id,
         ]);
 
-        JobAssignmentFactory::new()->create([
+        $pendingAssignment = JobAssignmentFactory::new()->create([
             'client_id' => $client->id,
             'job_id' => $pendingJob->id,
             'worker_id' => $worker->id,
@@ -367,10 +373,12 @@ class UsersFlowTest extends TestCase
             ->assertJsonPath('status', 'success')
             ->assertJsonCount(2, 'data');
 
-        $assignments = collect($response->json('data'))->keyBy('id');
+        $assignments = collect($response->json('data'))->keyBy('assignment_id');
 
-        expect($assignments->get($reviewedJob->id)['has_reviewed'])->toBeTrue();
-        expect($assignments->get($pendingJob->id)['has_reviewed'])->toBeFalse();
+        expect($assignments->get($reviewedAssignment->id)['job']['id'])->toBe($reviewedJob->id);
+        expect($assignments->get($reviewedAssignment->id)['has_reviewed'])->toBeTrue();
+        expect($assignments->get($pendingAssignment->id)['job']['id'])->toBe($pendingJob->id);
+        expect($assignments->get($pendingAssignment->id)['has_reviewed'])->toBeFalse();
     }
 
     public function test_me_assignments_forbidden_for_client()

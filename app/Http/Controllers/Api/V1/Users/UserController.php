@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Users;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Users\UpdateProfileRequest;
 use App\Http\Resources\Api\V1\Bids\BidResource;
+use App\Http\Resources\Api\V1\Jobs\JobAssignmentResource;
 use App\Http\Resources\Api\V1\Jobs\JobResource;
 use App\Http\Resources\Api\V1\Reviews\ReviewResource;
 use App\Http\Resources\Api\V1\Users\PublicUserResource;
@@ -130,7 +131,7 @@ class UserController extends Controller
         $user = $request->attributes->get('auth_user');
 
         $query = $user->postedJobs()
-            ->with(['client', 'category', 'assignments.reviews'])
+            ->with(['client', 'category', 'assignments.worker', 'assignments.reviews'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -195,7 +196,7 @@ class UserController extends Controller
         $user = $request->attributes->get('auth_user');
 
         $query = $user->assignments()
-            ->with(['job.category', 'job.client', 'job.assignments.reviews'])
+            ->with(['job.category', 'job.client', 'worker', 'reviews'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -210,11 +211,9 @@ class UserController extends Controller
             perPage: (int) $request->input('limit', 10)
         );
 
-        $jobs = $paginator->getCollection()->map(fn($assignment) => $assignment->job);
-
         return $this->paginated(
             __('users.assignments.success'),
-            JobResource::collection($jobs),
+            JobAssignmentResource::collection($paginator),
             $paginator
         );
     }
