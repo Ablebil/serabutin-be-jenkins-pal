@@ -112,4 +112,40 @@ class Job extends Model
     {
         return $this->hasMany(JobAssignment::class);
     }
+
+    /**
+     * Check whether the given user has already reviewed this job context.
+     */
+    public function hasReviewedBy(?User $user): bool
+    {
+        if (is_null($user)) {
+            return false;
+        }
+
+        $assignments = $this->relationLoaded('assignments')
+            ? $this->assignments
+            : $this->assignments()->with('reviews')->get();
+
+        if ($assignments->isEmpty()) {
+            return false;
+        }
+
+        if ($user->role === 'worker') {
+            $assignment = $assignments->firstWhere('worker_id', $user->id);
+
+            return $assignment?->hasReviewedBy($user) ?? false;
+        }
+
+        if ($user->role === 'client') {
+            foreach ($assignments as $assignment) {
+                if (!$assignment->hasReviewedBy($user)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
 }

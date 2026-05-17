@@ -191,14 +191,45 @@ class UsersFlowTest extends TestCase
         ])->create(['role' => 'client']);
         $category = CategoryFactory::new()->create();
 
-        JobFactory::new()->create([
+        $reviewedJob = JobFactory::new()->create([
             'client_id' => $client->id,
             'category_id' => $category->id,
         ]);
 
-        JobFactory::new()->create([
+        $reviewedBid = BidFactory::new()->create([
+            'job_id' => $reviewedJob->id,
+            'worker_id' => UserFactory::new()->create(['role' => 'worker'])->id,
+        ]);
+
+        $reviewedAssignment = JobAssignmentFactory::new()->create([
+            'client_id' => $client->id,
+            'job_id' => $reviewedJob->id,
+            'worker_id' => $reviewedBid->worker_id,
+            'bid_id' => $reviewedBid->id,
+        ]);
+
+        ReviewFactory::new()->create([
+            'assignment_id' => $reviewedAssignment->id,
+            'reviewer_id' => $client->id,
+            'reviewee_id' => $reviewedBid->worker_id,
+            'rating' => 5,
+        ]);
+
+        $pendingJob = JobFactory::new()->create([
             'client_id' => $client->id,
             'category_id' => $category->id,
+        ]);
+
+        $pendingBid = BidFactory::new()->create([
+            'job_id' => $pendingJob->id,
+            'worker_id' => UserFactory::new()->create(['role' => 'worker'])->id,
+        ]);
+
+        JobAssignmentFactory::new()->create([
+            'client_id' => $client->id,
+            'job_id' => $pendingJob->id,
+            'worker_id' => $pendingBid->worker_id,
+            'bid_id' => $pendingBid->id,
         ]);
 
         $response = $this->getJson('/api/v1/users/me/jobs', $this->getHeaders($client));
@@ -206,6 +237,11 @@ class UsersFlowTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('status', 'success')
             ->assertJsonCount(2, 'data');
+
+        $jobs = collect($response->json('data'))->keyBy('id');
+
+        expect($jobs->get($reviewedJob->id)['has_reviewed'])->toBeTrue();
+        expect($jobs->get($pendingJob->id)['has_reviewed'])->toBeFalse();
     }
 
     public function test_me_jobs_forbidden_for_worker()
@@ -284,28 +320,57 @@ class UsersFlowTest extends TestCase
         ])->create(['role' => 'client']);
         $category = CategoryFactory::new()->create();
 
-        $job = JobFactory::new()->create([
+        $reviewedJob = JobFactory::new()->create([
             'client_id' => $client->id,
             'category_id' => $category->id,
         ]);
 
-        $bid = BidFactory::new()->create([
-            'job_id' => $job->id,
+        $reviewedBid = BidFactory::new()->create([
+            'job_id' => $reviewedJob->id,
+            'worker_id' => $worker->id,
+        ]);
+
+        $reviewedAssignment = JobAssignmentFactory::new()->create([
+            'client_id' => $client->id,
+            'job_id' => $reviewedJob->id,
+            'worker_id' => $worker->id,
+            'bid_id' => $reviewedBid->id,
+        ]);
+
+        ReviewFactory::new()->create([
+            'assignment_id' => $reviewedAssignment->id,
+            'reviewer_id' => $worker->id,
+            'reviewee_id' => $client->id,
+            'rating' => 5,
+        ]);
+
+        $pendingJob = JobFactory::new()->create([
+            'client_id' => $client->id,
+            'category_id' => $category->id,
+        ]);
+
+        $pendingBid = BidFactory::new()->create([
+            'job_id' => $pendingJob->id,
             'worker_id' => $worker->id,
         ]);
 
         JobAssignmentFactory::new()->create([
             'client_id' => $client->id,
-            'job_id' => $job->id,
+            'job_id' => $pendingJob->id,
             'worker_id' => $worker->id,
-            'bid_id' => $bid->id,
+            'bid_id' => $pendingBid->id,
         ]);
 
         $response = $this->getJson('/api/v1/users/me/assignments', $this->getHeaders($worker));
 
         $response->assertOk()
             ->assertJsonPath('status', 'success')
-            ->assertJsonCount(1, 'data');
+            ->assertJsonCount(2, 'data');
+
+        $assignments = collect($response->json('data'))->keyBy('id');
+
+        expect($assignments->get($reviewedJob->id)['has_reviewed'])->toBeTrue();
+        expect($assignments->get($pendingJob->id)['has_reviewed'])->toBeFalse();
     }
 
     public function test_me_assignments_forbidden_for_client()
