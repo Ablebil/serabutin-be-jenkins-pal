@@ -231,6 +231,26 @@ class BidsFlowTest extends TestCase
             'id' => $job->id,
             'status' => 'in_progress',
         ]);
+
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_type' => User::class,
+            'notifiable_id' => $this->worker->id,
+            'actor_id' => $this->client->id,
+            'type' => \App\Notifications\BidAcceptedNotification::class,
+        ]);
+
+        $notificationResponse = $this->withToken($this->getToken($this->worker))
+            ->getJson('/api/v1/notifications');
+
+        $notificationResponse->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.job_id', $job->id)
+            ->assertJsonPath('data.0.job_title', $job->title)
+            ->assertJsonPath('data.0.bid_id', $bid->id)
+            ->assertJsonPath('data.0.is_read', false);
+
+        expect($notificationResponse->json('meta.unread_count'))->toBe(1);
     }
 
     public function test_client_accepting_final_slot_auto_rejects_other_pending_bids(): void

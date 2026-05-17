@@ -8,6 +8,8 @@ use App\Http\Resources\Api\V1\Bids\BidResource;
 use App\Models\Bid;
 use App\Models\Job;
 use App\Models\JobAssignment;
+use App\Models\Notification as DbNotification;
+use App\Notifications\BidAcceptedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -53,11 +55,27 @@ class BidActionController extends Controller
 
             $bid->update(['status' => 'accepted']);
 
-            JobAssignment::query()->create([
+            $assignment = JobAssignment::query()->create([
                 'job_id' => $job->id,
                 'bid_id' => $bid->id,
                 'worker_id' => $bid->worker_id,
                 'client_id' => $job->client_id,
+            ]);
+
+            $notifPayload = [
+                'job_id' => $job->id,
+                'job_title' => $job->title,
+                'bid_id' => $bid->id,
+                'assignment_id' => $assignment->id,
+                'message' => __('notifications.bid_accepted', ['job' => $job->title]),
+            ];
+
+            DbNotification::query()->create([
+                'notifiable_type' => \App\Models\User::class,
+                'notifiable_id' => $bid->worker_id,
+                'actor_id' => $job->client_id,
+                'type' => BidAcceptedNotification::class,
+                'data' => $notifPayload,
             ]);
 
             if ($job->status === 'open') {
