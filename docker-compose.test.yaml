@@ -1,0 +1,57 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: serabutin-test-app
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    env_file:
+      - .env.testing
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+        php artisan key:generate &&
+        php artisan migrate --force &&
+        php artisan test"
+    networks:
+      - serabutin-test-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: serabutin-test-postgres
+    environment:
+      POSTGRES_DB: serabutin_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - serabutin-test-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d serabutin_test" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    container_name: serabutin-test-redis
+    command: redis-server
+    networks:
+      - serabutin-test-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  serabutin-test-network:
+    driver: bridge
