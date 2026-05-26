@@ -18,11 +18,11 @@ RUN apk add --no-cache \
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
-        pdo \
-        pdo_pgsql \
-        zip \
-        opcache \
-        gd
+    pdo \
+    pdo_pgsql \
+    zip \
+    opcache \
+    gd
 
 RUN pecl install redis && docker-php-ext-enable redis
 
@@ -38,7 +38,7 @@ RUN composer install \
 
 COPY . .
 
-RUN composer dump-autoload --optimize --no-dev
+RUN composer dump-autoload --optimize
 
 FROM php:8.3-fpm-alpine AS production
 
