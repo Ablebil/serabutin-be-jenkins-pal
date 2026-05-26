@@ -3,6 +3,7 @@
 .env
 .env.*
 !.env.example
+!.env.testing
 node_modules
 vendor
 storage/logs/*
@@ -16,6 +17,4 @@ docs/
 README.md
 *.md
 .github/
-tests/
-phpunit.xml
 .phpunit.cache/

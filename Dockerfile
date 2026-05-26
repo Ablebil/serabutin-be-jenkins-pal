@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-alpine AS builder
+FROM php:8.3-fpm-alpine AS base
 
 WORKDIR /var/www/html
 
@@ -30,13 +30,26 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY composer.json composer.lock ./
 
+FROM base AS testing
+
+COPY . .
+
+RUN cp .env.testing .env
+
+RUN composer install \
+    --prefer-dist
+
+RUN composer dump-autoload
+
+FROM base AS builder
+
+COPY . .
+
 RUN composer install \
     --no-dev \
     --no-scripts \
     --no-autoloader \
     --prefer-dist
-
-COPY . .
 
 RUN composer dump-autoload --optimize
 

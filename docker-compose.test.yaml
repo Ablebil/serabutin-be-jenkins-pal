@@ -3,13 +3,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: builder
+      target: testing
     container_name: serabutin-test-app
     working_dir: /var/www/html
-    volumes:
-      - .:/var/www/html
     env_file:
       - .env.testing
+    environment:
+      APP_ENV: testing
     depends_on:
       postgres:
         condition: service_healthy
@@ -17,7 +17,6 @@ services:
         condition: service_healthy
     command: >
       sh -c "
-        php artisan key:generate &&
         php artisan migrate --force &&
         php artisan test"
     networks:
