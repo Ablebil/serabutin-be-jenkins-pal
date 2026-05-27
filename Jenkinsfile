@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "ablebil/serabutin-be-jenkins-pal"
+        DOCKER_IMAGE = 'ablebil/serabutin-be-jenkins-pal'
         IMAGE_TAG = "prod-${env.BUILD_NUMBER}"
     }
 
@@ -11,7 +11,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -36,11 +35,16 @@ pipeline {
         stage('Docker Login') {
             steps {
                 withCredentials([
-                    string(credentialsId: 'DOCKERHUB_USERNAME', variable: 'DOCKER_USERNAME'),
-                    string(credentialsId: 'DOCKERHUB_TOKEN', variable: 'DOCKER_TOKEN')
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
                 ]) {
                     sh '''
-                        echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                        echo "$DOCKER_PASSWORD" | docker login \
+                            -u "$DOCKER_USERNAME" \
+                            --password-stdin
                     '''
                 }
             }
@@ -71,7 +75,7 @@ pipeline {
             steps {
                 withCredentials([
                     sshUserPrivateKey(
-                        credentialsId: 'PROD_SSH_PRIVATE_KEY',
+                        credentialsId: 'prod-ssh',
                         keyFileVariable: 'SSH_KEY',
                         usernameVariable: 'SSH_USER'
                     ),
@@ -102,7 +106,7 @@ pipeline {
             steps {
                 withCredentials([
                     sshUserPrivateKey(
-                        credentialsId: 'PROD_SSH_PRIVATE_KEY',
+                        credentialsId: 'prod-ssh',
                         keyFileVariable: 'SSH_KEY',
                         usernameVariable: 'SSH_USER'
                     ),
